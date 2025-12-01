@@ -151,3 +151,6 @@ app.post("/login", (req, res) => {
 /* ---------------------------------------------------------
 ---------- SET UP SERVER TO LISTEN ON DESIRED PORT ---------
 ----------------------------------------------------------*/
+app.listen(port, () => {
+    console.log("The server is listening");
+});
