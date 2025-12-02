@@ -14,7 +14,7 @@ const session = require("express-session");
 let path = require("path");
 
 // Setting up multer variable for image handling
-// const multer = require("multer"); ----- UNCOMMENT IF NEEDED -----
+const multer = require("multer");
 
 // Allows reading body of incoming HTTP requests and makes that data available on req.body
 let bodyParser = require("body-parser");
@@ -26,16 +26,16 @@ let app = express();
 app.set("view engine", "ejs");
 
 // ----- UNCOMMENT MULTER STUFF IF NEEDED -----
-/*
+
 // Root directory for static images
-const uploadRoot = path.join(__dirname, "images");
+const logoRoot = path.join(__dirname, "images");
 // Sub-directory where uploaded profile pictures will be stored
-const uploadDir = path.join(uploadRoot, "uploads");
+const logoDir = path.join(logoRoot, "logos");
 
 const storage = multer.diskStorage({
     // Save files into our uploads directory
     destination: (req, file, cb) => {
-        cb(null, uploadDir);
+        cb(null, logoDir);
     },
     // Reuse the original filename so users see familiar names
     filename: (req, file, cb) => {
@@ -46,8 +46,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Expose everything in /images (including uploads) as static assets
-app.use("/images", express.static(uploadRoot));
-*/
+app.use("/images", express.static(logoRoot));
+
 
 // process.env.PORT is when you deploy and 3000 is for test
 const port = process.env.PORT || 3000;
