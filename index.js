@@ -126,18 +126,18 @@ app.get("/login", (req, res) => {
 ----------------------------------*/
 
 app.post("/login", (req, res) => {
-    let username = req.body.username;
+    let email = req.body.email;
     let password = req.body.password;
 
-    knex.select("username", "password")
+    knex.select("email", "password")
         .from('users')
-        .where("username", username)
+        .where("email", email)
         .andWhere("password", password)
         .then(users => {
             // Check if a user was found with matching username AND password
             if (users.length > 0) {
                 req.session.isLoggedIn = true;
-                req.session.username = username;
+                req.session.email = email;
                 res.redirect("/");
             } else {
                 // No matching user found
