@@ -1,34 +1,436 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ella Rises</title>
 
-    <!-- Bootstrap CSS -->
-    <link 
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
-        rel="stylesheet"
-    >
+    <!-- Brand Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #F9F5EA; /* brand cream */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* NAVBAR ---------------------------------------------------- */
+
+        .navbar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 18px 40px;
+            background: #F9F5EA;
+            border-bottom: 2px solid #FFD8D1;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-shrink: 0;
+        }
+
+        .nav-right {
+            flex-shrink: 0;
+        }
+
+        .navbar a {
+            white-space: nowrap;
+        }
+
+        .nav-brand {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.8rem;
+            color: #3A3F3B;
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: #3A3F3B;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .nav-link:hover {
+            text-decoration: underline;
+            color: #CE325B;
+        }
+
+        .nav-login {
+            background: #F9AFB1;
+            padding: 8px 18px;
+            border-radius: 8px;
+            color: #3A3F3B;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .nav-login:hover {
+            background: #F4B092;
+        }
+
+        /* HEADER ---------------------------------------------------- */
+
+        header {
+            text-align: center;
+            padding: 60px 20px 40px 20px;
+        }
+
+        .site-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 3rem;
+            color: #3A3F3B;
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            color: #CE325B;
+            margin-bottom: 24px;
+        }
+
+        /* HERO ------------------------------------------------------ */
+
+        .hero {
+            background: #FFD8D1; /* soft blush */
+            padding: 40px 20px;
+            border-radius: 0 0 30px 30px;
+            text-align: center;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: #3A3F3B;
+            max-width: 800px;
+            margin: 0 auto 24px auto;
+            line-height: 1.6;
+        }
+
+        .btn-main {
+            background: #F9AFB1;
+            color: #3A3F3B;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-main:hover {
+            background: #F4B092;
+        }
+
+        /* SECTION ---------------------------------------------------- */
+
+        .section {
+            padding: 60px 20px;
+        }
+
+        .section:nth-child(even) {
+            background: #FFF;
+        }
+
+        .section h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2rem;
+            color: #3A3F3B;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        /* PROGRAM CARDS --------------------------------------------- */
+
+        .programs {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 32px;
+            margin-bottom: 40px;
+        }
+
+        .prog-card {
+            background: #FFFFFF;
+            border: 2px solid #9AB59D;
+            border-radius: 16px;
+            width: 260px;
+            height: 430px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            text-align: center;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        }
+
+        .prog-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            object-position: center;
+            border-bottom: 2px solid #F9F5EA;
+        }
+
+        .prog-content {
+            padding: 16px 14px;
+            flex-grow: 1;
+        }
+
+        .prog-card h3 {
+            font-family: 'DM Serif Display', serif;
+            color: #3A3F3B;
+            font-size: 1.25rem;
+            margin-bottom: 10px;
+        }
+
+        .prog-card p {
+            color: #3A3F3B;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            margin: 0;
+        }
+
+        .prog-card .btn-small {
+            background: #F9AFB1;
+            color: #3A3F3B;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            margin: 18px auto 22px auto;
+            display: inline-block;
+        }
+
+        .prog-card .btn-small:hover {
+            background: #F4B092;
+        }
+
+        /* FOOTER ---------------------------------------------------- */
+
+        footer {
+            background: #3A3F3B;
+            color: #F9F5EA;
+            text-align: center;
+            padding: 24px 10px;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #F9AFB1;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Full-width area with background image or color */
+        .donate-bg {
+            background: url('/images/logos/donate.png') center/cover no-repeat;
+            /* Fallback shade if image not loaded yet */
+            background-color: #FFD8D1;
+            padding: 90px 20px;
+            margin-top: 0px;
+            border-radius: 0;
+            position: relative;
+        }
+
+        /* White card */
+        .donate-card {
+            background: #FFFFFF;
+            padding: 50px 40px;
+            max-width: 800px;
+            margin: auto;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+            border: 2px solid #F9F5EA;
+        }
+
+        /* Title */
+        .donate-card h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.2rem;
+            margin-bottom: 16px;
+            color: #3A3F3B;
+        }
+
+        /* Text */
+        .donate-card p {
+            font-size: 1.15rem;
+            line-height: 1.65;
+            color: #3A3F3B;
+            max-width: 620px;
+            margin: 0 auto 32px auto;
+        }
+
+        /* Buttons layout */
+        .donate-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+        }
+
+        /* Donate button */
+        .btn-donateD {
+            background: #F9AFB1;
+            color: #3A3F3B;
+            padding: 12px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.2s;
+        }
+        .btn-donateD:hover {
+            background: #F4B092;
+        }
+
+        /* Impact button */
+        .btn-impactD {
+            background: #F9F5EA;
+            color: #3A3F3B;
+            padding: 12px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.2s;
+        }
+        .btn-impactD:hover {
+            background: #FFFFFF;
+        }
+
+    </style>
 </head>
 
-<body class="bg-light">
+<body>
 
-    <nav class="navbar navbar-light bg-white border-bottom">
-        <div class="container">
-            <a class="navbar-brand" href="/">My App</a>
-            <a class="btn btn-primary" href="/login">Login</a>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="/" class="nav-brand">Ella Rises</a>
+            <a href="/programs" class="nav-link">Programs</a>
+            <a href="/about" class="nav-link">About</a>
+            <a href="/contact" class="nav-link">Contact</a>
+        </div>
+
+        <div class="nav-right">
+            <a href="/login" class="nav-login">Login</a>
         </div>
     </nav>
 
-    <div class="container text-center mt-5">
-        <h1 class="mb-3">Welcome to My App</h1>
-        <p class="lead">
-            This is a simple landing page that introduces the app.
+    <!-- HEADER -->
+    <header>
+        <h1 class="site-title">Ella Rises</h1>
+        <p class="tagline">Empowering young women to rise, learn & lead</p>
+    </header>
+
+    <!-- HERO -->
+    <div class="hero">
+        <p>
+            Welcome to Ella Rises — a community uplifting Latina youth to pursue higher education,
+            embrace their cultural roots, and grow through arts, STEAM, and mentorship.
+            Our mission is to build confidence, spark dreams, and open doors to opportunity.
         </p>
 
-        <a href="/login" class="btn btn-primary mt-3">Get Started</a>
+        <a href="/enroll" class="btn-main">Enroll Now</a>
+        &nbsp;&nbsp;
+        <a href="/donate" class="btn-main">Support Us</a>
     </div>
+
+    <!-- PROGRAMS -->
+    <div class="section">
+        <h2>Our Programs</h2>
+
+        <div class="programs">
+
+            <div class="prog-card">
+                <img src="/images/programs/ballet.png" class="prog-img" alt="Ballet Folklórico">
+                <div class="prog-content">
+                    <h3>Ballet Folklórico</h3>
+                    <p>Dance rooted in culture — for creativity, confidence, and connection to heritage.</p>
+                </div>
+                <a href="/programs/folklorico" class="btn-small">Learn More</a>
+            </div>
+
+            <div class="prog-card">
+                <img src="/images/programs/mariachi.png" class="prog-img" alt="Mariachi">
+                <div class="prog-content">
+                    <h3>Mariachi</h3>
+                    <p>All-girls mariachi band — honoring heritage while building performance skills.</p>
+                </div>
+                <a href="/programs/mariachi" class="btn-small">Learn More</a>
+            </div>
+
+            <div class="prog-card">
+                <img src="/images/programs/steam.png" class="prog-img" alt="STEAM Workshops">
+                <div class="prog-content">
+                    <h3>STEAM Workshops</h3>
+                    <p>Science · Technology · Engineering · Arts · Math — hands-on learning experiences that spark curiosity.</p>
+                </div>
+                <a href="/programs/steam" class="btn-small">Learn More</a>
+            </div>
+
+            <div class="prog-card">
+                <img src="/images/programs/summit.png" class="prog-img" alt="Ella Rises Summit">
+                <div class="prog-content">
+                    <h3>Ella Rises Summit</h3>
+                    <p>A day-camp blending art, STEM, leadership & campus tours — inspiring girls to prepare for college.</p>
+                </div>
+                <a href="/programs/summit" class="btn-small">Learn More</a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="donate-bg">
+        <div class="donate-card">
+            <h2>Make a Difference</h2>
+            <p>
+                Your support helps uplift Latina youth through arts, STEAM, cultural pride, 
+                confidence building, and mentorship.
+            </p>
+
+            <div class="donate-buttons">
+                <a href="/donate" class="btn-donateD">Donate</a>
+                <a href="/impact" class="btn-impactD">Your Impact</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- WHY ELLA RISES -->
+    <div class="section" style="text-align: center;">
+        <h2>Why Ella Rises</h2>
+        <p style="max-width: 700px; margin: auto; color: #3A3F3B; font-size: 1.05rem; line-height: 1.6;">
+            Many Latina girls face unique challenges: balancing cultural expectations, navigating school systems, 
+            and dreaming big while honoring their heritage. Ella Rises offers a safe space of mentorship, creativity, 
+            and community — so every girl can rise with confidence, purpose, and pride.
+        </p>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        &copy; <%= new Date().getFullYear() %> Ella Rises. 
+        All rights reserved. 
+        &nbsp;|&nbsp; <a href="/contact">Contact Us</a> 
+        &nbsp;|&nbsp; <a href="/privacy">Privacy Policy</a>
+    </footer>
 
 </body>
 </html>

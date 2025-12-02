@@ -29,21 +29,33 @@ app.set("view engine", "ejs");
 
 // Root directory for static images
 const logoRoot = path.join(__dirname, "images");
-// Sub-directory where uploaded profile pictures will be stored
-const logoDir = path.join(logoRoot, "logos");
 
-const storage = multer.diskStorage({
-    // Save files into our uploads directory
+const logoDir = path.join(logoRoot, "logos");
+const programDir = path.join(logoRoot, "programs");
+
+// Storage for logos
+const logoStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, logoDir);
     },
-    // Reuse the original filename so users see familiar names
     filename: (req, file, cb) => {
         cb(null, file.originalname);
     }
 });
-// Create the Multer instance that will handle single-file uploads
-const upload = multer({ storage });
+
+// Storage for programs
+const programStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, programDir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);
+    }
+});
+
+// Upload handlers
+const uploadLogo = multer({ storage: logoStorage });
+const uploadProgram = multer({ storage: programStorage });
 
 // Expose everything in /images (including uploads) as static assets
 app.use("/images", express.static(logoRoot));
