@@ -3,9 +3,28 @@
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "express": "^5.2.0",
+    "express-session": "^1.18.2",
     "express-sessions": "^1.0.1",
     "knex": "^3.1.0",
     "multer": "^2.0.2",
     "pg": "^8.16.3"
-  }
+  },
+  "name": "intex",
+  "version": "1.0.0",
+  "description": "intex prject",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/etboi1/INTEX.git"
+  },
+  "author": "etgrundo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/etboi1/INTEX/issues"
+  },
+  "homepage": "https://github.com/etboi1/INTEX#readme"
 }
