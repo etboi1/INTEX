@@ -70,7 +70,7 @@ const knex = require("knex")({
         host : process.env.DB_HOST || "localhost",
         user : process.env.DB_USER || "postgres",
         password : process.env.DB_PASSWORD || "admin",
-        database : process.env.DB_NAME || "!!!!CHANGE ME !!!!", // ----- CHANGE TO DATABASE NAME -----
+        database : process.env.DB_NAME || "ellarises", // ----- CHANGE TO DATABASE NAME -----
         port : process.env.DB_PORT || 5432  // PostgreSQL 16 typically uses port 5434
     }
 });
@@ -82,7 +82,7 @@ app.use(express.urlencoded({extended: true}));
 // ----- WE WILL MODIFY THIS TO PROTECT THE APPROPRIATE ROUTES -----
 app.use((req, res, next) => {
     // Skip authentication for login routes
-    if (req.path === '/' || req.path === '/login' || req.path === '/logout') {
+    if (req.path === '/login' || req.path === '/logout') {
         //continue with the request path
         return next();
     }
@@ -110,6 +110,15 @@ app.get("/logout", (req, res) => {
         res.redirect("/");
     });
 });
+
+
+app.get("/", (req, res) => {
+    res.render("index")
+})
+
+app.get("/login", (req, res) => {
+    res.render("login", { error_message: "Please log in to access this page" })
+})
 
 
 /* --------------------------------
