@@ -104,7 +104,7 @@ app.use((req, res, next) => {
     }
     
     // Check if user is logged in for all other routes
-    if (req.session.isLoggedIn && req.path === '/viewPart') {
+    if (req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent')) {
         return next(); // User is logged in, continue
     } 
     else if (!req.session.isLoggedIn && req.path === '/viewPart'){
@@ -1331,6 +1331,230 @@ app.get("/searchAllMilestones", (req, res) => {
             });
         });
 });
+
+
+
+
+
+
+
+app.get("/viewAllDonations", (req, res) => {
+    knex("participant_donations as pd")
+        .join("participant_info as pi", "pd.part_id", "pi.part_id")
+        .select(
+            "pd.part_id",
+            "pd.donation_number",
+            "pd.donation_date",
+            "pd.donation_amount",
+            "pi.part_email",
+            "pi.part_first_name",
+            "pi.part_last_name",
+            "pi.total_donations"
+        )
+        .orderBy(["pd.part_id", "pd.donation_number"])
+        .then(donations => {
+            res.render("viewAllDonations", {
+                level: req.session.level,
+                donations,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading donations:", err.message);
+            res.render("viewAllDonations", {
+                level: req.session.level,
+                donations: [],
+                error_message: "Unable to load donations."
+            });
+        });
+});
+
+app.get("/addDonationGlobal", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    knex("participant_info")
+        .select("part_id", "part_email", "part_first_name", "part_last_name")
+        .orderBy("part_last_name")
+        .then(parts => {
+            res.render("addDonationGlobal", {
+                level: req.session.level,
+                parts,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading participants:", err.message);
+            res.render("addDonationGlobal", {
+                level: req.session.level,
+                parts: [],
+                error_message: "Unable to load participants."
+            });
+        });
+});
+
+app.post("/addDonationGlobal", (req, res) => {
+    const { part_id, donation_date, donation_amount } = req.body;
+
+    if (!part_id || !donation_date || !donation_amount) {
+        return knex("participant_info")
+            .select()
+            .then(parts => {
+                res.status(400).render("addDonationGlobal", {
+                    level: req.session.level,
+                    parts,
+                    error_message: "All fields are required."
+                });
+            });
+    }
+
+    knex("participant_donations")
+        .where({ part_id })
+        .max("donation_number as maxNum")
+        .first()
+        .then(result => {
+            const nextNum = (result.maxNum || 0) + 1;
+
+            return knex("participant_donations")
+                .insert({
+                    part_id,
+                    donation_number: nextNum,
+                    donation_date,
+                    donation_amount
+                })
+                .then(() => res.redirect("/viewAllDonations"));
+        })
+        .catch(err => {
+            console.error("Error adding donation:", err.message);
+            res.redirect("/viewAllDonations");
+        });
+});
+
+app.get("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    const partId = req.params.part_id;
+    const donationNumber = req.params.donation_number;
+
+    knex("participant_donations")
+        .where({ part_id: partId, donation_number: donationNumber })
+        .first()
+        .then(donation => {
+            if (!donation) return res.redirect("/viewAllDonations");
+
+            res.render("editDonationGlobal", {
+                level: req.session.level,
+                donation,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading donation:", err.message);
+            res.redirect("/viewAllDonations");
+        });
+});
+
+app.post("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
+    const partId = req.params.part_id;
+    const donationNumber = req.params.donation_number;
+
+    const { donation_date, donation_amount } = req.body;
+
+    knex("participant_donations")
+        .where({ part_id: partId, donation_number: donationNumber })
+        .update({
+            donation_date,
+            donation_amount
+        })
+        .then(() => res.redirect("/viewAllDonations"))
+        .catch(err => {
+            console.error("Error updating donation:", err.message);
+            res.redirect("/viewAllDonations");
+        });
+});
+
+app.post("/deleteDonationGlobal/:part_id/:donation_number", (req, res) => {
+    const partId = req.params.part_id;
+    const donationNumber = req.params.donation_number;
+
+    // 1. Get the donation amount first
+    knex("participant_donations")
+        .where({ part_id: partId, donation_number: donationNumber })
+        .first()
+        .then(donation => {
+            if (!donation) {
+                console.error("Donation not found");
+                return res.redirect("/viewAllDonations");
+            }
+
+            const amountToSubtract = donation.donation_amount || 0;
+
+            // 2. Delete the donation
+            return knex("participant_donations")
+                .where({ part_id: partId, donation_number: donationNumber })
+                .del()
+                .then(() => amountToSubtract);
+        })
+        .then(amountToSubtract => {
+            if (amountToSubtract === undefined) return; // error or nothing found
+
+            // 3. Subtract from participant_info.total_donations
+            return knex("participant_info")
+                .where({ part_id: partId })
+                .decrement("total_donations", amountToSubtract);
+        })
+        .then(() => {
+            res.redirect("/viewAllDonations");
+        })
+        .catch(err => {
+            console.error("Error deleting donation:", err.message);
+            res.redirect("/viewAllDonations");
+        });
+});
+
+app.get("/searchAllDonations", (req, res) => {
+    const search = req.query.search;
+
+    if (!search || search.trim() === "") {
+        return res.redirect("/viewAllDonations");
+    }
+
+    knex("participant_donations as pd")
+        .join("participant_info as pi", "pd.part_id", "pi.part_id")
+        .select(
+            "pd.part_id",
+            "pd.donation_number",
+            "pd.donation_date",
+            "pd.donation_amount",
+            "pi.part_email",
+            "pi.part_first_name",
+            "pi.part_last_name",
+            "pi.total_donations"
+        )
+        .where("pi.part_email", "ilike", `%${search}%`)
+        .orWhereRaw("CAST(pd.donation_date AS TEXT) ILIKE ?", [`%${search}%`])
+        .orderBy("pd.part_id")
+        .orderBy("pd.donation_number")
+        .then(donations => {
+            res.render("viewAllDonations", {
+                level: req.session.level,
+                donations,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error searching donations:", err.message);
+            res.render("viewAllDonations", {
+                level: req.session.level,
+                donations: [],
+                error_message: "Unable to search donations."
+            });
+        });
+});
+
 
 /* ---------------------------------------------------------
 ---------- SET UP SERVER TO LISTEN ON DESIRED PORT ---------
