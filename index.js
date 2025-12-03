@@ -104,11 +104,19 @@ app.use((req, res, next) => {
     }
     
     // Check if user is logged in for all other routes
-    if (req.session.isLoggedIn) {
-        next(); // User is logged in, continue
+    if (req.session.isLoggedIn && req.path === '/viewPart') {
+        return next(); // User is logged in, continue
     } 
-    else {
-        res.render("login", { error_message: "Please log in to access this page" });
+    else if (!req.session.isLoggedIn && req.path === '/viewPart'){
+        return res.render("login", { error_message: "Please log in to access this page" });
+    }
+
+    if (req.session.isLoggedIn && req.session.level === 'm') {
+        return next(); // User is logged in and a manager --> continue
+    } else if (req.session.isLoggedIn) {
+        return res.redirect("/")
+    } else {
+        return res.redirect("/login")
     }
 });
 
@@ -882,6 +890,239 @@ app.post("/milestones/:partId/delete/:milestoneNumber", (req, res) => {
             res.status(500).redirect(`/milestones/${partId}`);
         });
 });
+
+
+
+
+
+
+
+
+
+/* --------------------------------
+------------ EVENTS PAGE ----------
+----------------------------------*/
+
+// View all event occurrences
+app.get("/viewEvents", (req, res) => {
+    knex("event_occurrences as eo")
+        .join("event_templates as et", "eo.event_id", "et.event_id")
+        .join("location_capacities as lc", "eo.location_id", "lc.location_id")
+        .select(
+            "eo.event_occurrence_id",
+            "et.event_name",
+            "et.event_type",
+            "et.event_description",
+            "et.event_recurrence",
+            "eo.event_start_date_time",
+            "eo.event_end_date_time",
+            "eo.event_registration_deadline",
+            "lc.location_name",
+            "lc.location_capacity"
+        )
+        .orderBy("eo.event_start_date_time")
+        .then(events => {
+            res.render("viewEvents", {
+                level: req.session.level,
+                events,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading events:", err.message);
+            res.render("viewEvents", {
+                level: req.session.level,
+                events: [],
+                error_message: "Unable to load events."
+            });
+        });
+});
+
+app.get("/searchEvent", (req, res) => {
+    if (req.query.eventName === "") {
+        return res.redirect("/viewEvents");
+    }
+
+    knex("event_occurrences as eo")
+        .join("event_templates as et", "eo.event_id", "et.event_id")
+        .join("location_capacities as lc", "eo.location_id", "lc.location_id")
+        .where("et.event_name", req.query.eventName)
+        .select(
+            "eo.event_occurrence_id",
+            "et.event_name",
+            "et.event_type",
+            "et.event_description",
+            "et.event_recurrence",
+            "eo.event_start_date_time",
+            "eo.event_end_date_time",
+            "eo.event_registration_deadline",
+            "lc.location_name",
+            "lc.location_capacity"
+        )
+        .then(events => {
+            res.render("viewEvents", {
+                level: req.session.level,
+                events,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error searching events:", err.message);
+            res.render("viewEvents", {
+                level: req.session.level,
+                events: [],
+                error_message: "Unable to search events."
+            });
+        });
+});
+
+app.get("/addEvent", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    Promise.all([
+        knex("event_templates").select(),
+        knex("location_capacities").select()
+    ])
+        .then(([templates, locations]) => {
+            res.render("addEvent", {
+                level: req.session.level,
+                templates,
+                locations,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading addEvent page:", err.message);
+            res.render("addEvent", {
+                level: req.session.level,
+                templates: [],
+                locations: [],
+                error_message: "Unable to load event creation form."
+            });
+        });
+});
+
+app.post("/addEvent", (req, res) => {
+    const { event_id, event_start_date_time, event_end_date_time, location_id, event_registration_deadline } = req.body;
+
+    if (!event_id || !event_start_date_time || !event_end_date_time || !location_id || !event_registration_deadline) {
+        return Promise.all([
+            knex("event_templates").select(),
+            knex("location_capacities").select()
+        ]).then(([templates, locations]) => {
+            res.status(400).render("addEvent", {
+                level: req.session.level,
+                templates,
+                locations,
+                error_message: "All fields are required."
+            });
+        });
+    }
+
+    const newEvent = {
+        event_id,
+        event_start_date_time,
+        event_end_date_time,
+        location_id,
+        event_registration_deadline
+    };
+
+    knex("event_occurrences")
+        .insert(newEvent)
+        .then(() => {
+            res.redirect("/viewEvents");
+        })
+        .catch(err => {
+            console.error("Error adding event:", err.message);
+            res.status(500).render("addEvent", {
+                level: req.session.level,
+                templates: [],
+                locations: [],
+                error_message: "Unable to save event."
+            });
+        });
+});
+
+app.get("/editEvent/:event_occurrence_id", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    const eventOccurrenceId = req.params.event_occurrence_id;
+
+    Promise.all([
+        knex("event_occurrences").where({ event_occurrence_id: eventOccurrenceId }).first(),
+        knex("event_templates").select(),
+        knex("location_capacities").select()
+    ])
+        .then(([event, templates, locations]) => {
+            if (!event) {
+                return res.status(404).render("viewEvents", {
+                    level: req.session.level,
+                    events: [],
+                    error_message: "Event not found."
+                });
+            }
+
+            res.render("editEvent", {
+                level: req.session.level,
+                event,
+                templates,
+                locations,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading editEvent page:", err.message);
+            res.status(500).render("viewEvents", {
+                level: req.session.level,
+                events: [],
+                error_message: "Unable to load event."
+            });
+        });
+});
+app.post("/editEvent/:event_occurrence_id", (req, res) => {
+    const eventOccurrenceId = req.params.event_occurrence_id;
+    const { event_id, event_start_date_time, event_end_date_time, location_id, event_registration_deadline } = req.body;
+
+    const updatedEvent = {
+        event_id,
+        event_start_date_time,
+        event_end_date_time,
+        location_id,
+        event_registration_deadline
+    };
+
+    knex("event_occurrences")
+        .where({ event_occurrence_id: eventOccurrenceId })
+        .update(updatedEvent)
+        .then(() => {
+            res.redirect("/viewEvents");
+        })
+        .catch(err => {
+            console.error("Error updating event:", err.message);
+            res.status(500).render("editEvent", {
+                event: { event_occurrence_id: eventOccurrenceId },
+                error_message: "Unable to update event."
+            });
+        });
+});
+
+app.post("/deleteEvent/:event_occurrence_id", (req, res) => {
+    knex("event_occurrences")
+        .where({ event_occurrence_id: req.params.event_occurrence_id })
+        .del()
+        .then(() => {
+            res.redirect("/viewEvents");
+        })
+        .catch(err => {
+            console.error("Error deleting event:", err.message);
+            res.status(500).json({ err });
+        });
+});
+
 
 
 /* ---------------------------------------------------------
