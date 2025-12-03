@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Event</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/addStyles.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="brand">Ella Rises</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Log Out</a>
+        </div>
+    </div>
+
+    <a href="/viewEvents" class="back-btn">← Back to Events</a>
+
+    <div class="container">
+        <h1>Add Event</h1>
+
+        <% if (error_message) { %>
+        <div class="error-box"><%= error_message %></div>
+        <% } %>
+
+        <form action="/addEvent" method="POST">
+
+            <div class="form-group">
+                <label>Select Event Template</label>
+                <select name="event_id" required>
+                    <% templates.forEach(t => { %>
+                        <option value="<%= t.event_id %>">
+                            <%= t.event_name %> (<%= t.event_type %>)
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Start Date & Time</label>
+                <input type="datetime-local" name="event_start_date_time" required>
+            </div>
+
+            <div class="form-group">
+                <label>End Date & Time</label>
+                <input type="datetime-local" name="event_end_date_time" required>
+            </div>
+
+            <div class="form-group">
+                <label>Select Location</label>
+                <select name="location_id" required>
+                    <% locations.forEach(l => { %>
+                        <option value="<%= l.location_id %>">
+                            <%= l.location_name %> (capacity: <%= l.location_capacity %>)
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Registration Deadline</label>
+                <input type="datetime-local" name="event_registration_deadline" required>
+            </div>
+
+            <button type="submit" class="submit-btn">Add Event</button>
+        </form>
+    </div>
+
+</body>
+</html>
