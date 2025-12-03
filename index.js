@@ -1125,6 +1125,213 @@ app.post("/deleteEvent/:event_occurrence_id", (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.get("/viewAllMilestones", (req, res) => {
+    knex("participant_milestones as pm")
+        .join("participant_info as pi", "pm.part_id", "pi.part_id")
+        .select(
+            "pm.part_id",
+            "pm.milestone_number",
+            "pm.milestone_title",
+            "pm.milestone_date",
+            "pi.part_email",
+            "pi.part_first_name",
+            "pi.part_last_name"
+        )
+        .orderBy(["pm.part_id", "pm.milestone_number"])
+        .then(milestones => {
+            res.render("viewAllMilestones", {
+                level: req.session.level,
+                milestones,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading milestones:", err.message);
+            res.render("viewAllMilestones", {
+                level: req.session.level,
+                milestones: [],
+                error_message: "Unable to load milestones."
+            });
+        });
+});
+
+
+app.get("/addMilestoneGlobal", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    knex("participant_info")
+        .select("part_id", "part_email", "part_first_name", "part_last_name")
+        .orderBy("part_last_name")
+        .then(parts => {
+            res.render("addMilestoneGlobal", {
+                level: req.session.level,
+                parts,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading participants:", err.message);
+            res.render("addMilestoneGlobal", {
+                level: req.session.level,
+                parts: [],
+                error_message: "Unable to load participants."
+            });
+        });
+});
+
+app.post("/addMilestoneGlobal", (req, res) => {
+    const { part_id, milestone_title, milestone_date } = req.body;
+
+    if (!part_id || !milestone_title || !milestone_date) {
+        return knex("participant_info")
+            .select()
+            .then(parts => {
+                res.status(400).render("addMilestoneGlobal", {
+                    level: req.session.level,
+                    parts,
+                    error_message: "All fields are required."
+                });
+            });
+    }
+
+    // find next milestone number
+    knex("participant_milestones")
+        .where({ part_id })
+        .max("milestone_number as maxNum")
+        .first()
+        .then(result => {
+            const nextNum = (result.maxNum || 0) + 1;
+
+            return knex("participant_milestones")
+                .insert({
+                    part_id,
+                    milestone_number: nextNum,
+                    milestone_title,
+                    milestone_date
+                })
+                .then(() => {
+                    res.redirect("/viewAllMilestones");
+                });
+        })
+        .catch(err => {
+            console.error("Error adding milestone:", err.message);
+            res.status(500).redirect("/viewAllMilestones");
+        });
+});
+
+app.get("/editMilestoneGlobal/:part_id/:milestone_number", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    const partId = req.params.part_id;
+    const milestoneNumber = req.params.milestone_number;
+
+    knex("participant_milestones")
+        .where({ part_id: partId, milestone_number: milestoneNumber })
+        .first()
+        .then(milestone => {
+            if (!milestone) {
+                return res.redirect("/viewAllMilestones");
+            }
+
+            res.render("editMilestoneGlobal", {
+                level: req.session.level,
+                milestone,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading milestone:", err.message);
+            res.redirect("/viewAllMilestones");
+        });
+});
+
+app.post("/editMilestoneGlobal/:part_id/:milestone_number", (req, res) => {
+    const partId = req.params.part_id;
+    const milestoneNumber = req.params.milestone_number;
+    const { milestone_title, milestone_date } = req.body;
+
+    knex("participant_milestones")
+        .where({ part_id: partId, milestone_number: milestoneNumber })
+        .update({
+            milestone_title,
+            milestone_date
+        })
+        .then(() => res.redirect("/viewAllMilestones"))
+        .catch(err => {
+            console.error("Error updating milestone:", err.message);
+            res.redirect("/viewAllMilestones");
+        });
+});
+
+app.post("/deleteMilestoneGlobal/:part_id/:milestone_number", (req, res) => {
+    const partId = req.params.part_id;
+    const milestoneNumber = req.params.milestone_number;
+
+    knex("participant_milestones")
+        .where({ part_id: partId, milestone_number: milestoneNumber })
+        .del()
+        .then(() => res.redirect("/viewAllMilestones"))
+        .catch(err => {
+            console.error("Error deleting milestone:", err.message);
+            res.redirect("/viewAllMilestones");
+        });
+});
+
+app.get("/searchAllMilestones", (req, res) => {
+    const search = req.query.search;
+
+    if (!search || search.trim() === "") {
+        return res.redirect("/viewAllMilestones");
+    }
+
+    knex("participant_milestones as pm")
+        .join("participant_info as pi", "pm.part_id", "pi.part_id")
+        .select(
+            "pm.part_id",
+            "pm.milestone_number",
+            "pm.milestone_title",
+            "pm.milestone_date",
+            "pi.part_email",
+            "pi.part_first_name",
+            "pi.part_last_name"
+        )
+        .where("pi.part_email", "ilike", `%${search}%`)
+        .orWhere("pm.milestone_title", "ilike", `%${search}%`)
+        .orderBy(["pm.part_id", "pm.milestone_number"])
+        .then(milestones => {
+            res.render("viewAllMilestones", {
+                level: req.session.level,
+                milestones,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error searching milestones:", err.message);
+            res.render("viewAllMilestones", {
+                level: req.session.level,
+                milestones: [],
+                error_message: "Unable to search milestones."
+            });
+        });
+});
+
 /* ---------------------------------------------------------
 ---------- SET UP SERVER TO LISTEN ON DESIRED PORT ---------
 ----------------------------------------------------------*/

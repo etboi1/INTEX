@@ -63,8 +63,7 @@
                         <th>City</th>
                         <th>State</th>
                         <th>Zip</th>
-                        <th>School</th>
-                        <th>Donations</th>
+                        <th>School or Employer</th>
                         <% if (level === "m") { %>
                         <th>Edit</th>
                         <th>Delete</th>
@@ -92,7 +91,6 @@
                             <td><%= part.part_state %></td>
                             <td><%= part.part_zip %></td>
                             <td><%= part.part_school_or_employer %></td>
-                            <td>$<%= part.total_donations %></td>
 
                             <% if (level === "m") { %>
                             <td>
