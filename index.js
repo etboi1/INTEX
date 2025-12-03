@@ -95,7 +95,7 @@ app.use(express.urlencoded({extended: true}));
 // ----- WE WILL MODIFY THIS TO PROTECT THE APPROPRIATE ROUTES -----
 app.use((req, res, next) => {
     // Skip authentication for login routes
-    if (req.path === '/login' || req.path === '/logout') {
+    if (req.path === '/' || req.path === '/login' || req.path === '/logout') {
         //continue with the request path
         return next();
     }
@@ -126,11 +126,25 @@ app.get("/logout", (req, res) => {
 
 
 app.get("/", (req, res) => {
-    res.render("index")
+    res.render("index", {level: req.session.level, login: req.session.isLoggedIn})
 })
 
 app.get("/login", (req, res) => {
     res.render("login", { error_message: "Please log in to access this page" })
+})
+
+app.get("/viewPart", (req, res) => {
+    knex.select().from("participant_info").then(parts => {
+        res.render("viewPart", {parts: parts, error_message: ""})
+    })
+    .catch(err => {
+        console.error("Participant error:", err);
+        res.render("viewPart", {parts: [], error_message: "Participant Table cannot be found" });
+    });
+})
+
+app.get("/addPart", (req, res) => {
+    res.render("addPart", {error_message: ""})
 })
 
 
@@ -142,7 +156,7 @@ app.post("/login", (req, res) => {
     let email = req.body.email;
     let password = req.body.password;
 
-    knex.select("email", "password")
+    knex.select("email", "password", "level")
         .from('users')
         .where("email", email)
         .andWhere("password", password)
@@ -151,6 +165,7 @@ app.post("/login", (req, res) => {
             if (users.length > 0) {
                 req.session.isLoggedIn = true;
                 req.session.email = email;
+                req.session.level = users[0].level;
                 res.redirect("/");
             } else {
                 // No matching user found
@@ -163,6 +178,58 @@ app.post("/login", (req, res) => {
         });
 });
 
+app.post("/addPart", (req, res) => {
+
+    const {
+    part_email,
+    part_first_name,
+    part_last_name,
+    part_dob,
+    part_role,
+    part_phone,
+    part_city,
+    part_state,
+    part_zip,
+    part_school_or_employer,
+    total_donations
+} = req.body;
+
+    // Basic validation to ensure required fields are present.
+    if (!part_email || !part_first_name || !part_last_name || !part_dob || !part_role || !part_phone || !part_city || !part_state || !part_zip || !part_school_or_employer || !total_donations) {
+        return res.status(400).render("addPart", { error_message: "All fields are required." });
+    }
+
+    // Shape the data to match the users table schema.
+    // Object literal - other languages use dictionaries
+    // When the object is inserted with Knex, that value profileImagePath,
+    // becomes the database column profile_image, so the saved path to 
+    // the uploaded image ends up in the profile_image column for that user.
+    const newPart = {
+        part_email,
+        part_first_name,
+        part_last_name,
+        part_dob,
+        part_role,
+        part_phone,
+        part_city,
+        part_state,
+        part_zip,
+        part_school_or_employer,
+        total_donations
+    };
+
+    // Insert the record into PostgreSQL and return the user list on success.
+    knex("participant_info")
+        .insert(newPart)
+        .then(() => {
+            res.redirect("/viewPart");
+        })
+        .catch((dbErr) => {
+            console.error("Error inserting participant:", dbErr.message);
+            // Database error, so show the form again with a generic message.
+            res.status(500).render("addPart", { error_message: "Unable to save participant. Please try again." });
+        });
+});  
 
 /* --------------------------------
 ---------- DELETE ROUTES ----------
