@@ -149,7 +149,29 @@ app.get("/addPart", (req, res) => {
     } else {
         res.redirect("/")
     }
-    
+})
+
+app.get("/editPart/:part_id", (req, res) => {
+    if (req.session.level === "m") {
+        knex.select().from("participant_info").where("part_id", req.params.part_id).first().then(part => {
+            if (!part) {
+                return res.status(404).render("viewPart", {
+                    parts: [],
+                    error_message: "Part not found."
+                });
+            }
+            res.render("editPart", {part: part, error_message: ""})
+        })
+        .catch((err) => {
+            console.error("Error fetching part:", err.message);
+            res.status(500).render("viewPart", {
+                parts: [],
+                error_message: "Unable to load participant for editing."
+            });
+        });
+    } else {
+        res.redirect("/")
+    }
 })
 
 
@@ -197,18 +219,13 @@ app.post("/addPart", (req, res) => {
     part_zip,
     part_school_or_employer,
     total_donations
-} = req.body;
+    } = req.body;
 
     // Basic validation to ensure required fields are present.
     if (!part_email || !part_first_name || !part_last_name || !part_dob || !part_role || !part_phone || !part_city || !part_state || !part_zip || !part_school_or_employer || !total_donations) {
         return res.status(400).render("addPart", {error_message: "All fields are required." });
     }
 
-    // Shape the data to match the users table schema.
-    // Object literal - other languages use dictionaries
-    // When the object is inserted with Knex, that value profileImagePath,
-    // becomes the database column profile_image, so the saved path to 
-    // the uploaded image ends up in the profile_image column for that user.
     const newPart = {
         part_email,
         part_first_name,
@@ -223,7 +240,7 @@ app.post("/addPart", (req, res) => {
         total_donations
     };
 
-    // Insert the record into PostgreSQL and return the user list on success.
+    // Insert the record into PostgreSQL and return the participant list on success.
     knex("participant_info")
         .insert(newPart)
         .then(() => {
@@ -236,10 +253,115 @@ app.post("/addPart", (req, res) => {
         });
 });  
 
+app.post("/editPart/:part_id", (req, res) => {
+    const partId = req.params.part_id;
+    const {
+    part_email,
+    part_first_name,
+    part_last_name,
+    part_dob,
+    part_role,
+    part_phone,
+    part_city,
+    part_state,
+    part_zip,
+    part_school_or_employer,
+    total_donations
+    } = req.body;
+
+    if (!part_email || !part_first_name || !part_last_name || !part_dob || !part_role || !part_phone || !part_city || !part_state || !part_zip || !part_school_or_employer || !total_donations) {
+        return knex("participant_info")
+            .where({ part_id: partId })
+            .first()
+            .then((part) => {
+                if (!part) {
+                    return res.status(404).render("viewPart", {
+                        parts: [],
+                        error_message: "Participant not found."
+                    });
+                }
+
+                res.status(400).render("editPart", {
+                    part,
+                    error_message: "All fields are required."
+                });
+            })
+            .catch((err) => {
+                console.error("Error fetching participant:", err.message);
+                res.status(500).render("viewPart", {
+                    parts: [],
+                    error_message: "Unable to load participant for editing."
+                });
+            });
+    }
+
+    const updatedPart = {
+        part_email,
+        part_first_name,
+        part_last_name,
+        part_dob,
+        part_role,
+        part_phone,
+        part_city,
+        part_state,
+        part_zip,
+        part_school_or_employer,
+        total_donations
+    };
+
+    knex("participant_info")
+        .where({ part_id: partId })
+        .update(updatedPart)
+        .then((rowsUpdated) => {
+            if (rowsUpdated === 0) {
+                return res.status(404).render("viewPart", {
+                    parts: [],
+                    error_message: "Participant not found."
+                });
+            }
+
+            res.redirect("/viewPart");
+        })
+        .catch((err) => {
+            console.error("Error updating participant:", err.message);
+            knex("participant_info")
+                .where({ part_id: partId })
+                .first()
+                .then((part) => {
+                    if (!part) {
+                        return res.status(404).render("viewPart", {
+                            parts: [],
+                            error_message: "Participant not found."
+                        });
+                    }
+
+                    res.status(500).render("editPart", {
+                        part,
+                        error_message: "Unable to update participant. Please try again."
+                    });
+                })
+                .catch((fetchErr) => {
+                    console.error("Error fetching participant after update failure:", fetchErr.message);
+                    res.status(500).render("viewPart", {
+                        parts: [],
+                        error_message: "Unable to update participant."
+                    });
+                });
+        });
+});
+
 /* --------------------------------
 ---------- DELETE ROUTES ----------
 ----------------------------------*/
 
+app.post("/deletePart/:part_id", (req, res) => {
+    knex("participant_info").where("part_id", req.params.part_id).del().then(parts => {
+        res.redirect("/viewPart");
+    }).catch(err => {
+        console.log(err);
+        res.status(500).json({err});
+    })
+});
 
 
 /* ---------------------------------------------------------
