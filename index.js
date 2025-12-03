@@ -699,13 +699,14 @@ app.get("/milestones/:partId", (req, res) => {
                 });
             }
 
-            knex("participant_milestone")
+            knex("participant_milestones")
                 .where({ part_id: partId })
                 .orderBy("milestone_number")
                 .then((milestones) => {
                     res.render("displayMilestones", {
                         participant,
                         milestones,
+                        level: req.session.level,
                         error_message: "",
                         success_message: ""
                     });
@@ -746,6 +747,7 @@ app.get("/milestones/:partId/add", (req, res) => {
             }
 
             res.render("addMilestone", {
+                level: req.session.level,
                 participant,
                 error_message: ""
             });
@@ -766,20 +768,21 @@ app.post("/milestones/:partId/add", (req, res) => {
 
     if (!milestone_title || !milestone_date) {
         return res.status(400).render("addMilestone", {
+            level: req.session.level,
             error_message: "Title and date are required.",
             participant: { part_id: partId }
         });
     }
 
     // Determine next milestone number
-    knex("participant_milestone")
+    knex("participant_milestones")
         .where({ part_id: partId })
         .max("milestone_number as maxNum")
         .first()
         .then((result) => {
             const nextNumber = (result.maxNum || 0) + 1;
 
-            return knex("participant_milestone").insert({
+            return knex("participant_milestones").insert({
                 part_id: partId,
                 milestone_number: nextNumber,
                 milestone_title,
@@ -792,6 +795,7 @@ app.post("/milestones/:partId/add", (req, res) => {
         .catch((err) => {
             console.error("Error adding milestone:", err.message);
             res.status(500).render("addMilestone", {
+                level: req.session.level,
                 participant: { part_id: partId },
                 error_message: "Unable to add milestone."
             });
@@ -801,7 +805,7 @@ app.post("/milestones/:partId/add", (req, res) => {
 app.get("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
     const { partId, milestoneNumber } = req.params;
 
-    knex("participant_milestone")
+    knex("participant_milestones")
         .where({
             part_id: partId,
             milestone_number: milestoneNumber
@@ -810,6 +814,7 @@ app.get("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
         .then((milestone) => {
             if (!milestone) {
                 return res.status(404).render("displayMilestones", {
+                    level: req.session.level,
                     participant: { part_id: partId },
                     milestones: [],
                     error_message: "Milestone not found."
@@ -817,6 +822,7 @@ app.get("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
             }
 
             res.render("editMilestone", {
+                level: req.session.level,
                 milestone,
                 participantId: partId,
                 error_message: ""
@@ -825,6 +831,7 @@ app.get("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
         .catch((err) => {
             console.error("Error loading milestone:", err.message);
             res.status(500).render("displayMilestones", {
+                level: req.session.level,
                 participant: { part_id: partId },
                 milestones: [],
                 error_message: "Unable to load milestone."
@@ -836,7 +843,7 @@ app.post("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
     const { partId, milestoneNumber } = req.params;
     const { milestone_title, milestone_date } = req.body;
 
-    knex("participant_milestone")
+    knex("participant_milestones")
         .where({
             part_id: partId,
             milestone_number: milestoneNumber
@@ -851,6 +858,7 @@ app.post("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
         .catch((err) => {
             console.error("Error updating milestone:", err.message);
             res.status(500).render("editMilestone", {
+                level: req.session.level,
                 milestone: { part_id: partId, milestone_number: milestoneNumber },
                 error_message: "Unable to update milestone."
             });
@@ -860,7 +868,7 @@ app.post("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
 app.post("/milestones/:partId/delete/:milestoneNumber", (req, res) => {
     const { partId, milestoneNumber } = req.params;
 
-    knex("participant_milestone")
+    knex("participant_milestones")
         .where({
             part_id: partId,
             milestone_number: milestoneNumber
