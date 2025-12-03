@@ -1,0 +1,193 @@
+/* ============================================================
+    GLOBAL PAGE STYLING
+   ============================================================ */
+body {
+    font-family: 'Montserrat', sans-serif;
+    background: #F9F5EA;
+    margin: 0;
+    padding: 0;
+}
+
+/* ============================================================
+    NAVBAR
+   ============================================================ */
+.navbar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 18px 40px;
+    background: #F9F5EA;
+    border-bottom: 2px solid #FFD8D1;
+    box-sizing: border-box;
+}
+
+.navbar .brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: #333;
+}
+
+.navbar a {
+    color: #333;
+    font-weight: 500;
+    text-decoration: none;
+    margin-left: 20px;
+}
+
+/* ============================================================
+    PAGE CONTAINER
+   ============================================================ */
+.container {
+    width: 95%;
+    max-width: 1400px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 14px;
+    border: 2px solid #FFD8D1;
+}
+
+h1 {
+    font-family: 'DM Serif Display', serif;
+    text-align: center;
+    color: #333;
+    margin-top: 0;
+}
+
+/* ============================================================
+    SEARCH BAR (SHARED)
+   ============================================================ */
+.search-input {
+    padding: 10px;
+    width: 60%;
+    border: 2px solid #FFD8D1;
+    border-radius: 10px;
+}
+
+.search-btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 2px solid #FFC4BA;
+    background: #FFD8D1;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.search-btn:hover {
+    background: #FFEEE9;
+}
+
+/* ============================================================
+    ERROR MESSAGE BOX
+   ============================================================ */
+.error-box {
+    background: #FFE5E2;
+    color: #B20000;
+    border: 2px solid #FFB8B1;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-weight: 500;
+    margin: 20px auto;
+    text-align: center;
+    width: 90%;
+    max-width: 600px;
+}
+
+/* ============================================================
+    ADD / VIEW BUTTONS
+   ============================================================ */
+.add-btn-container {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.add-btn {
+    display: inline-block;
+    background: #FFD8D1;
+    border: 2px solid #FFC4BA;
+    padding: 10px 18px;
+    color: #333;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.add-btn:hover {
+    background: #FFEEE9;
+}
+
+/* ============================================================
+    TABLE STYLING (SHARED FOR USERS + PARTICIPANTS)
+   ============================================================ */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 25px;
+    table-layout: auto;
+}
+
+table th,
+table td {
+    border-bottom: 1px solid #f0e6dc;
+    text-align: left;
+    word-wrap: break-word;
+    white-space: normal;
+    font-size: 12px;
+    padding: 8px 10px;
+}
+
+table th {
+    background: #FFF3EF;
+    font-weight: 600;
+}
+
+tr:hover {
+    background: #FFF9F6;
+}
+
+/* ============================================================
+    ACTION BUTTONS FOR TABLE ROWS
+   ============================================================ */
+.action-btn,
+.ms-action-btn {
+    background: #FFD8D1;
+    border: 2px solid #FFC4BA;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.action-btn {
+    width: 70px;
+}
+
+.ms-action-btn {
+    width: 90px;
+}
+
+.action-btn:hover,
+.ms-action-btn:hover {
+    background: #FFEEE9;
+}
+
+td form {
+    display: inline;
+}
+
+/* ============================================================
+    EMPTY STATE (NO RESULTS)
+   ============================================================ */
+.empty {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
