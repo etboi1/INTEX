@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>All Participants</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #F9F5EA;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 18px 40px;
+            background: #F9F5EA;
+            border-bottom: 2px solid #FFD8D1;
+            box-sizing: border-box;
+        }
+
+        .navbar .brand {
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px;
+            color: #333;
+        }
+
+        .navbar a {
+            color: #333;
+            font-weight: 500;
+            text-decoration: none;
+            margin-left: 20px;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1400px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 14px;
+            border: 2px solid #FFD8D1;
+        }
+
+        h1 {
+            font-family: 'DM Serif Display', serif;
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            table-layout: auto;
+        }
+
+        table th, table td {
+            border-bottom: 1px solid #f0e6dc;
+            text-align: left;
+            word-wrap: break-word;
+            font-size: 14px;
+            padding: 12px 16px; 
+            white-space: nowrap;
+        }
+
+        table th {
+            background: #FFF3EF;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #FFF9F6;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error-box {
+            background: #FFE5E2;
+            color: #B20000;
+            border: 2px solid #FFB8B1;
+            padding: 14px 18px;
+            border-radius: 10px;
+            font-weight: 500;
+            margin: 20px auto;
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .add-btn {
+            display: inline-block;
+            background: #FFD8D1;
+            border: 2px solid #FFC4BA;
+            padding: 10px 18px;
+            color: #333;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .add-btn:hover {
+            background: #FFEEE9;
+        }
+
+        .add-btn-container {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            background: #FFD8D1;
+            border: 2px solid #FFC4BA;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            width: 80px;
+        }
+
+        .action-btn:hover {
+            background: #FFEEE9;
+        }
+
+        td form {
+            display: inline;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="brand">Ella Rises</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Log Out</a>
+            <a href="/users">Users</a>
+        </div>
+    </div>
+
+    <% if (error_message && error_message !== "") { %>
+        <div class="error-box">
+            <%= error_message %>
+        </div>
+    <% } %>
+
+    <div class="add-btn-container">
+        <a href="/addPart" class="add-btn">Add Participant</a>
+    </div>
+
+    <div class="container">
+        <h1>All Participants</h1>
+
+        <% if (parts && parts.length > 0) { %>
+            <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>First</th>
+                        <th>Last</th>
+                        <th>Birth</th>
+                        <th>Role</th>
+                        <th>Phone</th>
+                        <th>City</th>
+                        <th>State</th>
+                        <th>Zip</th>
+                        <th>School</th>
+                        <th>Donations</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <% parts.forEach(part => { 
+                        // Format date safely
+                        let dob = "";
+                        if (part.part_dob) {
+                            dob = part.part_dob.toISOString().split("T")[0];
+                        }
+                    %>
+                        <tr>
+                            <td><%= part.part_email %></td>
+                            <td><%= part.part_first_name %></td>
+                            <td><%= part.part_last_name %></td>
+                            <td><%= dob %></td>
+                            <td><%= part.part_role %></td>
+                            <td><%= part.part_phone %></td>
+                            <td><%= part.part_city %></td>
+                            <td><%= part.part_state %></td>
+                            <td><%= part.part_zip %></td>
+                            <td><%= part.part_school_or_employer %></td>
+                            <td><%= part.total_donations %></td>
+
+                            <td>
+                                <form action="/editPart/<%= part.part_id %>" method="get">
+                                    <input class="action-btn" type="submit" value="Edit" />
+                                </form>
+                            </td>
+
+                            <td>
+                                <form action="/deletePart/<%= part.part_id %>" method="post">
+                                    <input class="action-btn" type="submit" value="Delete" />
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+            </div>
+
+        <% } else { %>
+            <div class="empty">No users found.</div>
+        <% } %>
+    </div>
+
+</body>
+</html>
