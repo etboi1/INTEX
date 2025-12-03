@@ -153,8 +153,19 @@
         <div>
             <a href="/">Home</a>
             <a href="/logout">Log Out</a>
-            <a href="/users">Users</a>
+            <a href="/viewUsers">Users</a>
         </div>
+    </div>
+
+    <div style="padding-top: 20px;">
+    <form method="GET" action="/searchPart" style="text-align:center; margin-bottom:20px;">
+        <input type="text" name="emailSearch" placeholder="Search by email..." style="padding:10px; width:60%; border:2px solid #FFD8D1; border-radius:10px;"/>
+        <button 
+            type="submit" 
+            style="padding:10px 20px; border-radius:10px; border:2px solid #FFC4BA; background:#FFD8D1; font-weight:600;">
+            Search
+        </button>
+    </form>
     </div>
 
     <% if (error_message && error_message !== "") { %>
@@ -163,11 +174,12 @@
         </div>
     <% } %>
 
-    <% if (level === "m") { %>
     <div class="add-btn-container">
+        <% if (level === "m") { %>
         <a href="/addPart" class="add-btn">Add Participant</a>
+        <% } %>
+        <a href="/viewPart" class="add-btn">View All</a>
     </div>
-    <% } %>
 
     <div class="container">
         <h1>All Participants</h1>

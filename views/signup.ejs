@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ella Rises — Login</title>
+    <title>Ella Rises — Create Account</title>
 
     <!-- Brand Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -129,17 +129,10 @@
             <h1 class="text-center site-title">Ella Rises</h1>
 
             <p class="text-center login-divider">
-                — <em>login</em> —
+                — <em>Create Account</em> —
             </p>
 
-            <p class="text-center text-muted mb-4" style="font-size: 0.9rem;">
-                Don't have an account?
-                <a href="/signup" style="font-weight:600; color:#CE325B;">
-                    Sign Up!
-                </a>
-            </p>
-
-            <form action="/login" method="POST">
+            <form action="/addSignUp" method="POST">
 
                 <!-- Email -->
                 <div class="mb-3">
@@ -165,8 +158,10 @@
                     >
                 </div>
 
+                <input type="hidden" name="level" value="u">
+
                 <button type="submit" class="btn btn-main w-100">
-                    Login
+                    Sign Up
                 </button>
 
                 <p class="text-center mt-3 mb-0">

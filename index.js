@@ -95,7 +95,7 @@ app.use(express.urlencoded({extended: true}));
 // ----- WE WILL MODIFY THIS TO PROTECT THE APPROPRIATE ROUTES -----
 app.use((req, res, next) => {
     // Skip authentication for login routes
-    if (req.path === '/' || req.path === '/login' || req.path === '/logout') {
+    if (req.path === '/' || req.path === '/login' || req.path === '/logout' || req.path === '/signup' || '/addSignUp') {
         //continue with the request path
         return next();
     }
@@ -133,8 +133,26 @@ app.get("/login", (req, res) => {
     res.render("login", { error_message: "Please log in to access this page" })
 })
 
+app.get("/signup", (req, res) => {
+    res.render("signup", { error_message: "" })
+})
+
 app.get("/viewPart", (req, res) => {
     knex.select().from("participant_info").then(parts => {
+        res.render("viewPart", {level: req.session.level, parts: parts, error_message: ""})
+    })
+    .catch(err => {
+        console.error("Participant error:", err);
+        res.render("viewPart", {level: req.session.level, parts: [], error_message: "Participant Table cannot be found" });
+    });
+})
+
+app.get("/searchPart", (req, res) => {
+    if (req.query.emailSearch === "") {
+        return res.redirect("/viewPart");
+    }
+
+    knex.select().from("participant_info").where("part_email", req.query.emailSearch).then(parts => {
         res.render("viewPart", {level: req.session.level, parts: parts, error_message: ""})
     })
     .catch(err => {
@@ -173,6 +191,77 @@ app.get("/editPart/:part_id", (req, res) => {
         res.redirect("/")
     }
 })
+
+
+                                                                // USERS PAGE
+
+// View all users (master only)
+app.get("/viewUsers", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    knex.select().from("users").then(users => {
+        res.render("viewUsers", { level: req.session.level, users: users, error_message: "" });
+    })
+    .catch(err => {
+        console.error("Users error:", err);
+        res.render("viewUsers", { level: req.session.level, users: [], error_message: "Users table cannot be found" });
+    });
+});
+
+app.get("/searchUser", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+    if (req.query.emailSearch === "") {
+        return res.redirect("/viewUsers");
+    }
+
+    knex.select().from("users").where("email", req.query.emailSearch).then(users => {
+        res.render("viewUsers", { level: req.session.level, users: users, error_message: "" });
+    })
+    .catch(err => {
+        console.error("Users error:", err);
+        res.render("viewUsers", { level: req.session.level, users: [], error_message: "Users table cannot be found" });
+    });
+});
+
+// Add user page
+app.get("/addUser", (req, res) => {
+    if (req.session.level === "m") {
+        res.render("addUser", { error_message: "" });
+    } else {
+        res.redirect("/");
+    }
+});
+
+// Edit user page
+app.get("/editUser/:user_id", (req, res) => {
+    if (req.session.level === "m") {
+        knex("users")
+            .where("user_id", req.params.user_id)
+            .first()
+            .then(user => {
+                if (!user) {
+                    return res.status(404).render("viewUsers", {
+                        users: [],
+                        error_message: "User not found."
+                    });
+                }
+                res.render("editUser", { user: user, error_message: "" });
+            })
+            .catch(err => {
+                console.error("Edit user error:", err);
+                res.status(500).render("viewUsers", {
+                    users: [],
+                    error_message: "Unable to load user for editing."
+                });
+            });
+    } else {
+        res.redirect("/");
+    }
+});
 
 
 /* --------------------------------
@@ -349,6 +438,127 @@ app.post("/editPart/:part_id", (req, res) => {
                 });
         });
 });
+
+
+
+                                                            // User Data
+// Add user
+app.post("/addUser", (req, res) => {
+    const { email, password, level } = req.body;
+
+    if (!email || !password || !level) {
+        return res.status(400).render("addUser", { error_message: "All fields are required." });
+    }
+
+    const newUser = { email, password, level };
+
+    knex("users")
+        .insert(newUser)
+        .then(() => {
+            res.redirect("/viewUsers");
+        })
+        .catch(dbErr => {
+            console.error("Add user error:", dbErr.message);
+            res.status(500).render("addUser", { error_message: "Unable to save user. Please try again." });
+        });
+});
+
+app.post("/addSignUp", (req, res) => {
+    const { email, password, level } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).render("signup", { error_message: "All fields are required." });
+    }
+
+    const newUser = { email, password, level };
+
+    knex("users")
+        .insert(newUser)
+        .then(() => {
+            res.redirect("/login");
+        })
+        .catch(dbErr => {
+            console.error("Add user error:", dbErr.message);
+            res.status(500).render("signup", { error_message: "Unable to save user. Please try again." });
+        });
+});
+
+// Edit user
+app.post("/editUser/:user_id", (req, res) => {
+    const userId = req.params.user_id;
+    const { email, password, level } = req.body;
+
+    if (!email || !password || !level) {
+        return knex("users").where({ user_id: userId }).first()
+            .then(user => {
+                if (!user) {
+                    return res.status(404).render("viewUsers", {
+                        users: [],
+                        error_message: "User not found."
+                    });
+                }
+
+                res.status(400).render("editUser", {
+                    user,
+                    error_message: "All fields are required."
+                });
+            })
+            .catch(err => {
+                console.error("Error loading user:", err);
+                res.status(500).render("viewUsers", {
+                    users: [],
+                    error_message: "Unable to load user for editing."
+                });
+            });
+    }
+
+    const updatedUser = { email, password, level };
+
+    knex("users")
+        .where({ user_id: userId })
+        .update(updatedUser)
+        .then(rowsUpdated => {
+            if (rowsUpdated === 0) {
+                return res.status(404).render("viewUsers", {
+                    users: [],
+                    error_message: "User not found."
+                });
+            }
+            res.redirect("/viewUsers");
+        })
+        .catch(err => {
+            console.error("Error updating user:", err);
+            knex("users").where({ user_id: userId }).first()
+                .then(user => {
+                    res.status(500).render("editUser", {
+                        user,
+                        error_message: "Unable to update user. Please try again."
+                    });
+                })
+                .catch(fetchErr => {
+                    console.error("Post-update fetching error:", fetchErr);
+                    res.status(500).render("viewUsers", {
+                        users: [],
+                        error_message: "Unable to update user."
+                    });
+                });
+        });
+});
+
+// Delete user
+app.post("/deleteUser/:user_id", (req, res) => {
+    knex("users")
+        .where("user_id", req.params.user_id)
+        .del()
+        .then(() => {
+            res.redirect("/viewUsers");
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({ err });
+        });
+});
+
 
 /* --------------------------------
 ---------- DELETE ROUTES ----------

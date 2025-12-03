@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Participant</title>
+    <title>Edit User</title>
 
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 
@@ -22,7 +22,12 @@
             padding: 18px 40px;
             background: #F9F5EA;
             border-bottom: 2px solid #FFD8D1;
-            box-sizing: border-box;
+        }
+
+        .brand {
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px;
+            color: #333;
         }
 
         .navbar a {
@@ -32,15 +37,9 @@
             margin-left: 20px;
         }
 
-        .brand {
-            font-family: 'DM Serif Display', serif;
-            font-size: 26px;
-            color: #333;
-        }
-
         .container {
-            width: 90%;
-            max-width: 700px;
+            width: 95%;
+            max-width: 900px;
             margin: 40px auto;
             background: white;
             padding: 30px;
@@ -51,19 +50,18 @@
         h1 {
             font-family: 'DM Serif Display', serif;
             text-align: center;
-            color: #333;
             margin-top: 0;
+            color: #333;
         }
 
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
 
         label {
             font-weight: 600;
             display: block;
             margin-bottom: 6px;
-            color: #333;
         }
 
         input, select {
@@ -71,8 +69,8 @@
             padding: 10px;
             border: 2px solid #FFD8D1;
             border-radius: 10px;
-            font-size: 16px;
             background: #FFF9F6;
+            font-size: 15px;
         }
 
         .submit-btn {
@@ -82,10 +80,9 @@
             padding: 12px;
             border-radius: 10px;
             font-weight: 600;
-            color: #333;
-            cursor: pointer;
             font-size: 16px;
-            margin-top: 20px;
+            cursor: pointer;
+            margin-top: 25px;
         }
 
         .submit-btn:hover {
@@ -117,75 +114,33 @@
     </div>
 
     <div class="container">
-        <h1>Add Participant</h1>
+        <h1>Edit User</h1>
 
         <% if (error_message) { %>
-        <div class="error-box">
-            <%= error_message %>
-        </div>
+            <div class="error-box"><%= error_message %></div>
         <% } %>
 
-        <form action="/addPart" method="POST">
+        <form action="/editUser/<%= user.user_id %>" method="POST">
 
             <div class="form-group">
                 <label>Email</label>
-                <input type="email" name="part_email" required>
+                <input type="email" name="email" value="<%= user.email %>" required>
             </div>
 
             <div class="form-group">
-                <label>First Name</label>
-                <input type="text" name="part_first_name" required>
+                <label>Password</label>
+                <input type="text" name="password" value="<%= user.password %>" required>
             </div>
 
             <div class="form-group">
-                <label>Last Name</label>
-                <input type="text" name="part_last_name" required>
-            </div>
-
-            <div class="form-group">
-                <label>Birth Date</label>
-                <input type="date" name="part_dob">
-            </div>
-
-            <div class="form-group">
-                <label>Role (p for participant, a for admin)</label>
-                <select name="part_role" required>
-                    <option value="p">Participant</option>
-                    <option value="a">Admin</option>
+                <label>Level</label>
+                <select name="level">
+                    <option value="u" <%= user.level === "u" ? "selected" : "" %>>User</option>
+                    <option value="m" <%= user.level === "m" ? "selected" : "" %>>Manager</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>Phone Number</label>
-                <input type="number" name="part_phone">
-            </div>
-
-            <div class="form-group">
-                <label>City</label>
-                <input type="text" name="part_city">
-            </div>
-
-            <div class="form-group">
-                <label>State</label>
-                <input type="text" maxlength="2" name="part_state">
-            </div>
-
-            <div class="form-group">
-                <label>Zip</label>
-                <input type="number" name="part_zip">
-            </div>
-
-            <div class="form-group">
-                <label>School or Employer</label>
-                <input type="text" name="part_school_or_employer">
-            </div>
-
-            <div class="form-group">
-                <label>Total Donations</label>
-                <input type="number" step="0.01" name="total_donations">
-            </div>
-
-            <button type="submit" class="submit-btn">Add Participant</button>
+            <button type="submit" class="submit-btn">Save Changes</button>
         </form>
     </div>
 

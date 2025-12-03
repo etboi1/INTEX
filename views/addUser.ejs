@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add Participant</title>
+    <title>Add User</title>
 
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 
@@ -117,7 +117,7 @@
     </div>
 
     <div class="container">
-        <h1>Add Participant</h1>
+        <h1>Add User</h1>
 
         <% if (error_message) { %>
         <div class="error-box">
@@ -125,67 +125,27 @@
         </div>
         <% } %>
 
-        <form action="/addPart" method="POST">
+        <form action="/addUser" method="POST">
 
             <div class="form-group">
                 <label>Email</label>
-                <input type="email" name="part_email" required>
+                <input type="email" name="email" required>
             </div>
 
             <div class="form-group">
-                <label>First Name</label>
-                <input type="text" name="part_first_name" required>
+                <label>Password</label>
+                <input type="text" name="password" required>
             </div>
 
             <div class="form-group">
-                <label>Last Name</label>
-                <input type="text" name="part_last_name" required>
-            </div>
-
-            <div class="form-group">
-                <label>Birth Date</label>
-                <input type="date" name="part_dob">
-            </div>
-
-            <div class="form-group">
-                <label>Role (p for participant, a for admin)</label>
-                <select name="part_role" required>
-                    <option value="p">Participant</option>
-                    <option value="a">Admin</option>
+                <label>Level</label>
+                <select name="level" required>
+                    <option value="u">User</option>
+                    <option value="m">Manager</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>Phone Number</label>
-                <input type="number" name="part_phone">
-            </div>
-
-            <div class="form-group">
-                <label>City</label>
-                <input type="text" name="part_city">
-            </div>
-
-            <div class="form-group">
-                <label>State</label>
-                <input type="text" maxlength="2" name="part_state">
-            </div>
-
-            <div class="form-group">
-                <label>Zip</label>
-                <input type="number" name="part_zip">
-            </div>
-
-            <div class="form-group">
-                <label>School or Employer</label>
-                <input type="text" name="part_school_or_employer">
-            </div>
-
-            <div class="form-group">
-                <label>Total Donations</label>
-                <input type="number" step="0.01" name="total_donations">
-            </div>
-
-            <button type="submit" class="submit-btn">Add Participant</button>
+            <button type="submit" class="submit-btn">Add User</button>
         </form>
     </div>
 
