@@ -88,6 +88,9 @@ const knex = require("knex")({
     }
 });
 
+// for stylesheet connection
+app.use("/styles", express.static(__dirname + "/styles"));
+
 // Tells Express how to read form data sent in the body of a request
 app.use(express.urlencoded({extended: true}));
 
@@ -95,7 +98,7 @@ app.use(express.urlencoded({extended: true}));
 // ----- WE WILL MODIFY THIS TO PROTECT THE APPROPRIATE ROUTES -----
 app.use((req, res, next) => {
     // Skip authentication for login routes
-    if (req.path === '/' || req.path === '/login' || req.path === '/logout' || req.path === '/signup' || '/addSignUp') {
+    if (req.path === '/' || req.path === '/login' || req.path === '/logout' || req.path === '/signup' || req.path === '/addSignUp') {
         //continue with the request path
         return next();
     }
@@ -130,7 +133,7 @@ app.get("/", (req, res) => {
 })
 
 app.get("/login", (req, res) => {
-    res.render("login", { error_message: "Please log in to access this page" })
+    res.render("login", { error_message: "" })
 })
 
 app.get("/signup", (req, res) => {
@@ -174,6 +177,7 @@ app.get("/editPart/:part_id", (req, res) => {
         knex.select().from("participant_info").where("part_id", req.params.part_id).first().then(part => {
             if (!part) {
                 return res.status(404).render("viewPart", {
+                    level: req.session.level,
                     parts: [],
                     error_message: "Part not found."
                 });
@@ -183,6 +187,7 @@ app.get("/editPart/:part_id", (req, res) => {
         .catch((err) => {
             console.error("Error fetching part:", err.message);
             res.status(500).render("viewPart", {
+                level: req.session.level,
                 parts: [],
                 error_message: "Unable to load participant for editing."
             });
@@ -297,25 +302,6 @@ app.post("/login", (req, res) => {
 app.post("/addPart", (req, res) => {
 
     const {
-    part_email,
-    part_first_name,
-    part_last_name,
-    part_dob,
-    part_role,
-    part_phone,
-    part_city,
-    part_state,
-    part_zip,
-    part_school_or_employer,
-    total_donations
-    } = req.body;
-
-    // Basic validation to ensure required fields are present.
-    if (!part_email || !part_first_name || !part_last_name || !part_dob || !part_role || !part_phone || !part_city || !part_state || !part_zip || !part_school_or_employer || !total_donations) {
-        return res.status(400).render("addPart", {error_message: "All fields are required." });
-    }
-
-    const newPart = {
         part_email,
         part_first_name,
         part_last_name,
@@ -327,111 +313,180 @@ app.post("/addPart", (req, res) => {
         part_zip,
         part_school_or_employer,
         total_donations
-    };
+    } = req.body;
 
-    // Insert the record into PostgreSQL and return the participant list on success.
-    knex("participant_info")
-        .insert(newPart)
-        .then(() => {
-            res.redirect("/viewPart");
+    // Required fields check
+    if (!part_email || !part_first_name || !part_last_name || !part_dob ||
+        !part_role || !part_phone || !part_city || !part_state || !part_zip ||
+        !part_school_or_employer || !total_donations) {
+
+        return res.status(400).render("addPart", { error_message: "All fields are required." });
+    }
+
+    return knex("participant_info")
+        .where("part_email", part_email)
+        .first()
+        .then(part => {
+            if (part) {
+                return res.render("addPart", { error_message: "Email is already in use" });
+            }
+
+            const newPart = {
+                part_email,
+                part_first_name,
+                part_last_name,
+                part_dob,
+                part_role,
+                part_phone,
+                part_city,
+                part_state,
+                part_zip,
+                part_school_or_employer,
+                total_donations
+            };
+
+            return knex("participant_info")
+                .insert(newPart)
+                .then(() => res.redirect("/viewPart"));
         })
-        .catch((dbErr) => {
-            console.error("Error inserting participant:", dbErr.message);
-            // Database error, so show the form again with a generic message.
-            res.status(500).render("addPart", {error_message: "Unable to save participant. Please try again." });
+        .catch(dbErr => {
+            console.error("Add participant error:", dbErr.message);
+            res.status(500).render("addPart", { 
+                error_message: "Unable to save participant. Please try again." 
+            });
         });
-});  
+}); 
 
 app.post("/editPart/:part_id", (req, res) => {
     const partId = req.params.part_id;
-    const {
-    part_email,
-    part_first_name,
-    part_last_name,
-    part_dob,
-    part_role,
-    part_phone,
-    part_city,
-    part_state,
-    part_zip,
-    part_school_or_employer,
-    total_donations
-    } = req.body;
+    const {part_email, part_first_name, part_last_name, part_dob, part_role, part_phone, part_city, part_state, part_zip, part_school_or_employer, total_donations} = req.body;
 
-    if (!part_email || !part_first_name || !part_last_name || !part_dob || !part_role || !part_phone || !part_city || !part_state || !part_zip || !part_school_or_employer || !total_donations) {
+    // Required fields check
+    if (
+        !part_email || !part_first_name || !part_last_name || !part_dob ||
+        !part_role || !part_phone || !part_city || !part_state ||
+        !part_zip || !part_school_or_employer || !total_donations
+    ) {
         return knex("participant_info")
             .where({ part_id: partId })
             .first()
-            .then((part) => {
+            .then(part => {
                 if (!part) {
                     return res.status(404).render("viewPart", {
+                        level: req.session.level,
                         parts: [],
                         error_message: "Participant not found."
                     });
                 }
 
-                res.status(400).render("editPart", {
+                return res.status(400).render("editPart", {
                     part,
                     error_message: "All fields are required."
                 });
             })
-            .catch((err) => {
+            .catch(err => {
                 console.error("Error fetching participant:", err.message);
-                res.status(500).render("viewPart", {
+                return res.status(500).render("viewPart", {
+                    level: req.session.level,
                     parts: [],
                     error_message: "Unable to load participant for editing."
                 });
             });
     }
 
-    const updatedPart = {
-        part_email,
-        part_first_name,
-        part_last_name,
-        part_dob,
-        part_role,
-        part_phone,
-        part_city,
-        part_state,
-        part_zip,
-        part_school_or_employer,
-        total_donations
-    };
-
+    // 1. Load original participant to compare email
     knex("participant_info")
         .where({ part_id: partId })
-        .update(updatedPart)
-        .then((rowsUpdated) => {
-            if (rowsUpdated === 0) {
+        .first()
+        .then(originalPart => {
+            if (!originalPart) {
                 return res.status(404).render("viewPart", {
+                    level: req.session.level,
                     parts: [],
                     error_message: "Participant not found."
                 });
             }
 
-            res.redirect("/viewPart");
+            // 2. If email has NOT changed → update immediately
+            if (originalPart.part_email === part_email) {
+                const updatedPart = {
+                    part_email,
+                    part_first_name,
+                    part_last_name,
+                    part_dob,
+                    part_role,
+                    part_phone,
+                    part_city,
+                    part_state,
+                    part_zip,
+                    part_school_or_employer,
+                    total_donations
+                };
+
+                return knex("participant_info")
+                    .where({ part_id: partId })
+                    .update(updatedPart)
+                    .then(() => res.redirect("/viewPart"));
+            }
+
+            // 3. Email WAS changed → check for duplicate email
+            return knex("participant_info")
+                .where({ part_email })
+                .first()
+                .then(existing => {
+                    if (existing) {
+                        // Email is already used by another participant
+                        return res.render("editPart", {
+                            part: originalPart,
+                            error_message: "Email is already in use"
+                        });
+                    }
+
+                    // 4. Email is free → update safely
+                    const updatedPart = {
+                        part_email,
+                        part_first_name,
+                        part_last_name,
+                        part_dob,
+                        part_role,
+                        part_phone,
+                        part_city,
+                        part_state,
+                        part_zip,
+                        part_school_or_employer,
+                        total_donations
+                    };
+
+                    return knex("participant_info")
+                        .where({ part_id: partId })
+                        .update(updatedPart)
+                        .then(() => res.redirect("/viewPart"));
+                });
         })
-        .catch((err) => {
+        .catch(err => {
             console.error("Error updating participant:", err.message);
-            knex("participant_info")
+
+            return knex("participant_info")
                 .where({ part_id: partId })
                 .first()
-                .then((part) => {
+                .then(part => {
                     if (!part) {
                         return res.status(404).render("viewPart", {
+                            level: req.session.level,
                             parts: [],
                             error_message: "Participant not found."
                         });
                     }
 
-                    res.status(500).render("editPart", {
+                    return res.status(500).render("editPart", {
                         part,
                         error_message: "Unable to update participant. Please try again."
                     });
                 })
-                .catch((fetchErr) => {
+                .catch(fetchErr => {
                     console.error("Error fetching participant after update failure:", fetchErr.message);
-                    res.status(500).render("viewPart", {
+                    return res.status(500).render("viewPart", {
+                        level: req.session.level,
                         parts: [],
                         error_message: "Unable to update participant."
                     });
@@ -450,13 +505,19 @@ app.post("/addUser", (req, res) => {
         return res.status(400).render("addUser", { error_message: "All fields are required." });
     }
 
+    knex.select().from("users").where("email", email).first().then(user => {
+        if (user) {
+            return res.render("addUser", { error_message: "Email is already in use" });
+        }
+
     const newUser = { email, password, level };
 
-    knex("users")
+    return knex("users")
         .insert(newUser)
         .then(() => {
-            res.redirect("/viewUsers");
+            return res.redirect("/viewUsers");
         })
+    })
         .catch(dbErr => {
             console.error("Add user error:", dbErr.message);
             res.status(500).render("addUser", { error_message: "Unable to save user. Please try again." });
@@ -470,26 +531,37 @@ app.post("/addSignUp", (req, res) => {
         return res.status(400).render("signup", { error_message: "All fields are required." });
     }
 
-    const newUser = { email, password, level };
+    knex.select().from("users").where("email", email).first().then(user => {
+        if (user) {
+            return res.render("signup", { error_message: "Email is already in use" });
+        }
 
-    knex("users")
-        .insert(newUser)
-        .then(() => {
-            res.redirect("/login");
-        })
+        const newUser = { email, password, level };
+
+        return knex("users")
+            .insert(newUser)
+            .then(() => {
+                return res.redirect("/login");
+            })
+    })
         .catch(dbErr => {
             console.error("Add user error:", dbErr.message);
             res.status(500).render("signup", { error_message: "Unable to save user. Please try again." });
         });
 });
 
+
+
 // Edit user
 app.post("/editUser/:user_id", (req, res) => {
     const userId = req.params.user_id;
     const { email, password, level } = req.body;
 
+    // Validate required fields
     if (!email || !password || !level) {
-        return knex("users").where({ user_id: userId }).first()
+        return knex("users")
+            .where({ user_id: userId })
+            .first()
             .then(user => {
                 if (!user) {
                     return res.status(404).render("viewUsers", {
@@ -498,53 +570,84 @@ app.post("/editUser/:user_id", (req, res) => {
                     });
                 }
 
-                res.status(400).render("editUser", {
+                return res.status(400).render("editUser", {
                     user,
                     error_message: "All fields are required."
                 });
             })
             .catch(err => {
                 console.error("Error loading user:", err);
-                res.status(500).render("viewUsers", {
+                return res.status(500).render("viewUsers", {
                     users: [],
                     error_message: "Unable to load user for editing."
                 });
             });
     }
 
-    const updatedUser = { email, password, level };
-
+    // 1. Load the original user so we can check if they changed the email
     knex("users")
         .where({ user_id: userId })
-        .update(updatedUser)
-        .then(rowsUpdated => {
-            if (rowsUpdated === 0) {
+        .first()
+        .then(originalUser => {
+            if (!originalUser) {
                 return res.status(404).render("viewUsers", {
                     users: [],
                     error_message: "User not found."
                 });
             }
-            res.redirect("/viewUsers");
+
+            // 2. If email has NOT changed, skip duplicate check
+            if (originalUser.email === email) {
+                const updatedUser = { email, password, level };
+                return knex("users")
+                    .where({ user_id: userId })
+                    .update(updatedUser)
+                    .then(() => res.redirect("/viewUsers"));
+            }
+
+            // 3. If email HAS changed, check for duplicates
+            return knex("users")
+                .where({ email })
+                .first()
+                .then(existingUser => {
+
+                    if (existingUser) {
+                        // Email already in use by a different account
+                        return res.render("editUser", {
+                            user: originalUser,
+                            error_message: "Email is already in use"
+                        });
+                    }
+
+                    // 4. Email is safe to use, update normally
+                    const updatedUser = { email, password, level };
+
+                    return knex("users")
+                        .where({ user_id: userId })
+                        .update(updatedUser)
+                        .then(() => res.redirect("/viewUsers"));
+                });
         })
         .catch(err => {
             console.error("Error updating user:", err);
-            knex("users").where({ user_id: userId }).first()
+            return knex("users")
+                .where({ user_id: userId })
+                .first()
                 .then(user => {
-                    res.status(500).render("editUser", {
+                    return res.status(500).render("editUser", {
                         user,
                         error_message: "Unable to update user. Please try again."
                     });
                 })
                 .catch(fetchErr => {
                     console.error("Post-update fetching error:", fetchErr);
-                    res.status(500).render("viewUsers", {
+                    return res.status(500).render("viewUsers", {
                         users: [],
                         error_message: "Unable to update user."
                     });
                 });
         });
 });
-
 // Delete user
 app.post("/deleteUser/:user_id", (req, res) => {
     knex("users")
@@ -571,6 +674,205 @@ app.post("/deletePart/:part_id", (req, res) => {
         console.log(err);
         res.status(500).json({err});
     })
+});
+
+
+
+
+
+
+
+
+
+app.get("/milestones/:partId", (req, res) => {
+    const partId = req.params.partId;
+
+    knex("participant_info")
+        .where({ part_id: partId })
+        .first()
+        .then((participant) => {
+            if (!participant) {
+                return res.status(404).render("viewPart", {
+                    level: req.session.level,
+                    parts: [],
+                    error_message: "Participant not found."
+                });
+            }
+
+            knex("participant_milestone")
+                .where({ part_id: partId })
+                .orderBy("milestone_number")
+                .then((milestones) => {
+                    res.render("displayMilestones", {
+                        participant,
+                        milestones,
+                        error_message: "",
+                        success_message: ""
+                    });
+                })
+                .catch((err) => {
+                    console.error("Error loading milestones:", err.message);
+                    res.status(500).render("viewPart", {
+                        level: req.session.level,
+                        parts: [],
+                        error_message: "Unable to load milestones."
+                    });
+                });
+        })
+        .catch((err) => {
+            console.error("Error loading participant:", err.message);
+            res.status(500).render("viewPart", {
+                level: req.session.level,
+                parts: [],
+                error_message: "Unable to load participant."
+            });
+        });
+});
+
+
+app.get("/milestones/:partId/add", (req, res) => {
+    const partId = req.params.partId;
+
+    knex("participant_info")
+        .where({ part_id: partId })
+        .first()
+        .then((participant) => {
+            if (!participant) {
+                return res.status(404).render("viewPart", {
+                    level: req.session.level,
+                    parts: [],
+                    error_message: "Participant not found."
+                });
+            }
+
+            res.render("addMilestone", {
+                participant,
+                error_message: ""
+            });
+        })
+        .catch((err) => {
+            console.error("Error loading participant:", err.message);
+            res.status(500).render("viewPart", {
+                level: req.session.level,
+                parts: [],
+                error_message: "Unable to load participant."
+            });
+        });
+});
+
+app.post("/milestones/:partId/add", (req, res) => {
+    const partId = req.params.partId;
+    const { milestone_title, milestone_date } = req.body;
+
+    if (!milestone_title || !milestone_date) {
+        return res.status(400).render("addMilestone", {
+            error_message: "Title and date are required.",
+            participant: { part_id: partId }
+        });
+    }
+
+    // Determine next milestone number
+    knex("participant_milestone")
+        .where({ part_id: partId })
+        .max("milestone_number as maxNum")
+        .first()
+        .then((result) => {
+            const nextNumber = (result.maxNum || 0) + 1;
+
+            return knex("participant_milestone").insert({
+                part_id: partId,
+                milestone_number: nextNumber,
+                milestone_title,
+                milestone_date
+            });
+        })
+        .then(() => {
+            res.redirect(`/milestones/${partId}`);
+        })
+        .catch((err) => {
+            console.error("Error adding milestone:", err.message);
+            res.status(500).render("addMilestone", {
+                participant: { part_id: partId },
+                error_message: "Unable to add milestone."
+            });
+        });
+});
+
+app.get("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
+    const { partId, milestoneNumber } = req.params;
+
+    knex("participant_milestone")
+        .where({
+            part_id: partId,
+            milestone_number: milestoneNumber
+        })
+        .first()
+        .then((milestone) => {
+            if (!milestone) {
+                return res.status(404).render("displayMilestones", {
+                    participant: { part_id: partId },
+                    milestones: [],
+                    error_message: "Milestone not found."
+                });
+            }
+
+            res.render("editMilestone", {
+                milestone,
+                participantId: partId,
+                error_message: ""
+            });
+        })
+        .catch((err) => {
+            console.error("Error loading milestone:", err.message);
+            res.status(500).render("displayMilestones", {
+                participant: { part_id: partId },
+                milestones: [],
+                error_message: "Unable to load milestone."
+            });
+        });
+});
+
+app.post("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
+    const { partId, milestoneNumber } = req.params;
+    const { milestone_title, milestone_date } = req.body;
+
+    knex("participant_milestone")
+        .where({
+            part_id: partId,
+            milestone_number: milestoneNumber
+        })
+        .update({
+            milestone_title,
+            milestone_date
+        })
+        .then(() => {
+            res.redirect(`/milestones/${partId}`);
+        })
+        .catch((err) => {
+            console.error("Error updating milestone:", err.message);
+            res.status(500).render("editMilestone", {
+                milestone: { part_id: partId, milestone_number: milestoneNumber },
+                error_message: "Unable to update milestone."
+            });
+        });
+});
+
+app.post("/milestones/:partId/delete/:milestoneNumber", (req, res) => {
+    const { partId, milestoneNumber } = req.params;
+
+    knex("participant_milestone")
+        .where({
+            part_id: partId,
+            milestone_number: milestoneNumber
+        })
+        .del()
+        .then(() => {
+            res.redirect(`/milestones/${partId}`);
+        })
+        .catch((err) => {
+            console.error("Error deleting milestone:", err.message);
+            res.status(500).redirect(`/milestones/${partId}`);
+        });
 });
 
 

@@ -132,6 +132,20 @@
                 — <em>Create Account</em> —
             </p>
 
+            <!-- Error Message -->
+            <% if (typeof error_message !== "undefined" && error_message) { %>
+                <div class="alert alert-danger text-center py-2" style="
+                    border-radius: 10px;
+                    font-size: 0.9rem;
+                    background: #F9AFB1; 
+                    color: #3A3F3B; 
+                    border: 2px solid #CE325B;
+                    font-weight: 600;
+                ">
+                    <%= error_message %>
+                </div>
+            <% } %>
+
             <form action="/addSignUp" method="POST">
 
                 <!-- Email -->
@@ -166,6 +180,9 @@
 
                 <p class="text-center mt-3 mb-0">
                     <a href="/">← Back to Home</a>
+                </p>
+                <p class="text-center mt-3 mb-0">
+                    <a href="/login">← Back to Login</a>
                 </p>
 
             </form>

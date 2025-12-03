@@ -139,6 +139,20 @@
                 </a>
             </p>
 
+            <!-- Error Message -->
+            <% if (typeof error_message !== "undefined" && error_message) { %>
+                <div class="alert alert-danger text-center py-2" style="
+                    border-radius: 10px;
+                    font-size: 0.9rem;
+                    background: #F9AFB1; 
+                    color: #3A3F3B; 
+                    border: 2px solid #CE325B;
+                    font-weight: 600;
+                ">
+                    <%= error_message %>
+                </div>
+            <% } %>
+
             <form action="/login" method="POST">
 
                 <!-- Email -->

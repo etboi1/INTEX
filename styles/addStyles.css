@@ -1,0 +1,135 @@
+/* ============================================================
+    GLOBAL PAGE BASE
+   ============================================================ */
+body {
+    font-family: 'Montserrat', sans-serif;
+    background: #F9F5EA;
+    margin: 0;
+    padding: 0;
+}
+
+/* ============================================================
+    NAVBAR
+   ============================================================ */
+.navbar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 18px 40px;
+    background: #F9F5EA;
+    border-bottom: 2px solid #FFD8D1;
+    box-sizing: border-box;
+}
+
+.navbar a {
+    color: #333;
+    font-weight: 500;
+    text-decoration: none;
+    margin-left: 20px;
+}
+
+.brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: #333;
+}
+
+/* ============================================================
+    PAGE CONTAINER
+   ============================================================ */
+.container {
+    width: 90%;
+    max-width: 1400px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 14px;
+    border: 2px solid #FFD8D1;
+}
+
+h1 {
+    font-family: 'DM Serif Display', serif;
+    text-align: center;
+    color: #333;
+    margin-top: 0;
+}
+
+/* ============================================================
+    FORM ELEMENTS
+   ============================================================ */
+.form-group {
+    margin-bottom: 18px;
+}
+
+label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #FFD8D1;
+    border-radius: 10px;
+    font-size: 16px;
+    background: #FFF9F6;
+}
+
+/* ============================================================
+    SUBMIT BUTTON
+   ============================================================ */
+.submit-btn {
+    width: 100%;
+    background: #FFD8D1;
+    border: 2px solid #FFC4BA;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+.submit-btn:hover {
+    background: #FFEEE9;
+}
+
+/* ============================================================
+    ERROR MESSAGE BOX
+   ============================================================ */
+.error-box {
+    background: #FFE5E2;
+    color: #B20000;
+    border: 2px solid #FFB8B1;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* ============================================================
+    BACK BUTTON (centered pink button)
+   ============================================================ */
+.back-btn {
+    display: block;
+    width: fit-content;
+    background: #FFD8D1;
+    color: #3A3F3B;
+    padding: 10px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    margin: 20px auto 20px auto;
+    border: 2px solid #FFC4BA;
+    transition: 0.2s;
+}
+
+.back-btn:hover {
+    background: #F4B092;
+}

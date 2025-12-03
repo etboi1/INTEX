@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= participant.part_first_name %> Milestones</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/viewStyles.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="brand">Ella Rises</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Log Out</a>
+        </div>
+    </div>
+
+    <a href="/viewPart" class="back-btn">← Back to Participants</a>
+
+    <div class="container">
+        <h1><%= participant.part_first_name %> <%= participant.part_last_name %> — Milestones</h1>
+
+        <% if (error_message) { %>
+            <div class="error-box"><%= error_message %></div>
+        <% } %>
+
+        <div class="add-btn-container">
+            <a href="/milestones/<%= participant.part_id %>/add" class="add-btn">Add Milestone</a>
+        </div>
+
+        <% if (milestones.length > 0) { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <% milestones.forEach(ms => { %>
+                    <tr>
+                        <td><%= ms.milestone_number %></td>
+                        <td><%= ms.milestone_title %></td>
+                        <td><%= ms.milestone_date.toISOString().split("T")[0] %></td>
+
+                        <td>
+                            <form action="/milestones/<%= participant.part_id %>/edit/<%= ms.milestone_number %>" method="get">
+                                <input class="action-btn" type="submit" value="Edit" />
+                            </form>
+                        </td>
+
+                        <td>
+                            <form action="/milestones/<%= participant.part_id %>/delete/<%= ms.milestone_number %>" method="post">
+                                <input class="action-btn" type="submit" value="Delete" />
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+
+        <% } else { %>
+            <div class="empty">No milestones yet.</div>
+        <% } %>
+
+    </div>
+</body>
+</html>
