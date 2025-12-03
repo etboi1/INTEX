@@ -163,9 +163,11 @@
         </div>
     <% } %>
 
+    <% if (level === "m") { %>
     <div class="add-btn-container">
         <a href="/addPart" class="add-btn">Add Participant</a>
     </div>
+    <% } %>
 
     <div class="container">
         <h1>All Participants</h1>
@@ -186,8 +188,10 @@
                         <th>Zip</th>
                         <th>School</th>
                         <th>Donations</th>
+                        <% if (level === "m") { %>
                         <th>Edit</th>
                         <th>Delete</th>
+                        <% } %>
                     </tr>
                 </thead>
 
@@ -204,14 +208,15 @@
                             <td><%= part.part_first_name %></td>
                             <td><%= part.part_last_name %></td>
                             <td><%= dob %></td>
-                            <td><%= part.part_role %></td>
-                            <td><%= part.part_phone %></td>
+                            <td><% if (part.part_role === "p") { %>Participant<% } else { %>Admin<% } %></td>
+                            <td><%= part.part_phone.toString().replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3") %></td>
                             <td><%= part.part_city %></td>
                             <td><%= part.part_state %></td>
                             <td><%= part.part_zip %></td>
                             <td><%= part.part_school_or_employer %></td>
-                            <td><%= part.total_donations %></td>
+                            <td>$<%= part.total_donations %></td>
 
+                            <% if (level === "m") { %>
                             <td>
                                 <form action="/editPart/<%= part.part_id %>" method="get">
                                     <input class="action-btn" type="submit" value="Edit" />
@@ -223,6 +228,7 @@
                                     <input class="action-btn" type="submit" value="Delete" />
                                 </form>
                             </td>
+                            <% } %>
                         </tr>
                     <% }) %>
                 </tbody>
