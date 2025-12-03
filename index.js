@@ -135,16 +135,21 @@ app.get("/login", (req, res) => {
 
 app.get("/viewPart", (req, res) => {
     knex.select().from("participant_info").then(parts => {
-        res.render("viewPart", {parts: parts, error_message: ""})
+        res.render("viewPart", {level: req.session.level, parts: parts, error_message: ""})
     })
     .catch(err => {
         console.error("Participant error:", err);
-        res.render("viewPart", {parts: [], error_message: "Participant Table cannot be found" });
+        res.render("viewPart", {level: req.session.level, parts: [], error_message: "Participant Table cannot be found" });
     });
 })
 
 app.get("/addPart", (req, res) => {
-    res.render("addPart", {error_message: ""})
+    if (req.session.level === "m") {
+        res.render("addPart", {error_message: ""})
+    } else {
+        res.redirect("/")
+    }
+    
 })
 
 
@@ -196,7 +201,7 @@ app.post("/addPart", (req, res) => {
 
     // Basic validation to ensure required fields are present.
     if (!part_email || !part_first_name || !part_last_name || !part_dob || !part_role || !part_phone || !part_city || !part_state || !part_zip || !part_school_or_employer || !total_donations) {
-        return res.status(400).render("addPart", { error_message: "All fields are required." });
+        return res.status(400).render("addPart", {error_message: "All fields are required." });
     }
 
     // Shape the data to match the users table schema.
@@ -227,7 +232,7 @@ app.post("/addPart", (req, res) => {
         .catch((dbErr) => {
             console.error("Error inserting participant:", dbErr.message);
             // Database error, so show the form again with a generic message.
-            res.status(500).render("addPart", { error_message: "Unable to save participant. Please try again." });
+            res.status(500).render("addPart", {error_message: "Unable to save participant. Please try again." });
         });
 });  
 
