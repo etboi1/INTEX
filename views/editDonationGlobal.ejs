@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page allows managers to edit donations on the global donations page -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,19 +23,23 @@
         </div>
     </div>
 
+    <!-- Back button to view all -->
     <a href="/viewAllDonations" class="back-btn">← Back to Donations</a>
 
     <div class="container">
         <h1>Edit Donation</h1>
 
+        <!-- Check for error message -->
         <% if (error_message) { %>
             <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- Post to submit the edit and send it to the DB -->
         <form action="/editDonationGlobal/<%= donation.part_id %>/<%= donation.donation_number %>" method="POST">
 
             <div class="form-group">
                 <label>Donation Date</label>
+                <!-- Value is formatted as a working date to autofill -->
                 <input type="date"
                     name="donation_date"
                     value="<%= donation.donation_date.toISOString().split('T')[0] %>"

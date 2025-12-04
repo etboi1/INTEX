@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page allows a manager to edit the global milestones page -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,15 +23,18 @@
         </div>
     </div>
 
+    <!-- back button -->
     <a href="/viewAllMilestones" class="back-btn">← Back to Milestones</a>
 
     <div class="container">
         <h1>Edit Milestone</h1>
 
+        <!-- Check for error message -->
         <% if (error_message) { %>
             <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- Post a milestone using a participant ID to also link to that participant -->
         <form action="/editMilestoneGlobal/<%= milestone.part_id %>/<%= milestone.milestone_number %>" method="POST">
 
             <div class="form-group">

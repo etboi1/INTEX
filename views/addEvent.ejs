@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page contains a form that allows managers to add an event to the database -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,21 +27,30 @@
     <div class="container">
         <h1>Add Event</h1>
 
+        <!-- Checking for error message -->
         <% if (error_message) { %>
         <div class="error-box"><%= error_message %></div>
         <% } %>
 
         <form action="/addEvent" method="POST">
 
-            <div class="form-group">
-                <label>Select Event Template</label>
-                <select name="event_id" required>
-                    <% templates.forEach(t => { %>
-                        <option value="<%= t.event_id %>">
-                            <%= t.event_name %> (<%= t.event_type %>)
-                        </option>
-                    <% }) %>
-                </select>
+            <div class="form-section">
+                <div class="section-header">
+                    <!-- Leads to the add template page -->
+                    <button class="mini-btn" onclick="window.location='/addEventTemplate'; return false;">+ Add Template</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Event Template</label>
+                    <select name="event_id" required>
+                        <!-- A dropdown list of each event template in teh database -->
+                        <% templates.forEach(t => { %>
+                            <option value="<%= t.event_id %>">
+                                <%= t.event_name %> (<%= t.event_type %>)
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">
@@ -51,15 +63,23 @@
                 <input type="datetime-local" name="event_end_date_time" required>
             </div>
 
-            <div class="form-group">
-                <label>Select Location</label>
-                <select name="location_id" required>
-                    <% locations.forEach(l => { %>
-                        <option value="<%= l.location_id %>">
-                            <%= l.location_name %> (capacity: <%= l.location_capacity %>)
-                        </option>
-                    <% }) %>
-                </select>
+            <div class="form-section">
+                <div class="section-header">
+                    <button class="mini-btn" onclick="window.location='/addLocation'; return false;">+ Add Location</button>
+                </div>
+
+                <div class="form-group">
+                    <!-- Dropdown list of all location templates in the database -->
+                    <label>Select Location</label>
+                    <select name="location_id" required>
+                        <!-- For each loop to get all of them in the dropdown -->
+                        <% locations.forEach(l => { %>
+                            <option value="<%= l.location_id %>">
+                                <%= l.location_name %> (capacity: <%= l.location_capacity %>)
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">

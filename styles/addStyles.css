@@ -133,3 +133,26 @@ select {
 .back-btn:hover {
     background: #F4B092;
 }
+
+.form-section {
+    margin-bottom: 20px;
+}
+
+.section-header {
+    margin-bottom: 6px;
+}
+
+.mini-btn {
+    background: #FFD8D1;
+    color: #3A3F3B;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.mini-btn:hover {
+    background: #ffc3b9;
+}

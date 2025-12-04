@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page shows the impact of donations along with a donate button -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,6 +21,7 @@
         <div class="nav-left">
             <a href="/" class="nav-brand">Ella Rises</a>
             <a href="/viewPart" class="nav-link">Participants</a>
+            <!-- Users table only viewable for managers -->
             <% if (level === "m") { %>
                 <a href="/viewUsers" class="nav-link">Users</a>
             <% } %>
@@ -28,6 +32,7 @@
         </div>
 
         <div class="nav-right">
+            <!-- Change button based on login status -->
             <% if (login) { %>
                 <a href="/logout" class="nav-login">Log Out</a>
             <% } else { %>
@@ -69,7 +74,7 @@
             </p>
 
             <div class="donate-buttons">
-                <a href="/donationImpact" class="nav-login">Donate Now!</a>
+                <a href="/publicDonate" class="nav-login">Donate Now!</a>
             </div>
 
         </div>
@@ -79,7 +84,7 @@
     <footer>
         &copy; <%= new Date().getFullYear() %> Ella Rises.
         All rights reserved. &nbsp;|&nbsp;
-        <a href="/contact">Contact Us</a> &nbsp;|&nbsp;
+        <!-- Gets to 418 status code -->
         <a href="/privacy">Privacy Policy</a>
     </footer>
 

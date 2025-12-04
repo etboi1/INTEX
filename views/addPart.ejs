@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- A page with a form for managers to add a participant to the database -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,6 +28,7 @@
     <div class="container">
         <h1>Add Participant</h1>
 
+        <!-- Check for error message -->
         <% if (error_message) { %>
         <div class="error-box">
             <%= error_message %>
@@ -54,7 +58,7 @@
             </div>
 
             <div class="form-group">
-                <label>Role (p for participant, a for admin)</label>
+                <label>Role</label>
                 <select name="part_role" required>
                     <option value="p">Participant</option>
                     <option value="a">Admin</option>
@@ -71,8 +75,9 @@
                 <input type="text" name="part_city">
             </div>
 
+            <!-- State will be in shorted form -->
             <div class="form-group">
-                <label>State</label>
+                <label>State (Two-letter abbreviated)</label>
                 <input type="text" maxlength="2" name="part_state">
             </div>
 
@@ -84,11 +89,6 @@
             <div class="form-group">
                 <label>School or Employer</label>
                 <input type="text" name="part_school_or_employer">
-            </div>
-
-            <div class="form-group">
-                <label>Total Donations</label>
-                <input type="number" step="0.01" name="total_donations">
             </div>
 
             <button type="submit" class="submit-btn">Add Participant</button>

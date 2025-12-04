@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page has a form for managers to add a new user to the page tied to login -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,12 +28,14 @@
     <div class="container">
         <h1>Add User</h1>
 
+        <!-- Checking for error message -->
         <% if (error_message) { %>
         <div class="error-box">
             <%= error_message %>
         </div>
         <% } %>
 
+        <!-- post route tied to user db -->
         <form action="/addUser" method="POST">
 
             <div class="form-group">
@@ -43,6 +48,7 @@
                 <input type="text" name="password" required>
             </div>
 
+            <!-- Select one -->
             <div class="form-group">
                 <label>Level</label>
                 <select name="level" required>

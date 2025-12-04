@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This is a page where managers can edit participant data -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,12 +28,15 @@
     <div class="container">
         <h1>Edit Participant</h1>
 
+        <!-- Check for error message -->
         <% if (error_message) { %>
             <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- Submit the edit to the DB -->
         <form action="/editPart/<%= part.part_id %>" method="POST">
 
+            <!-- Autofill all values -->
             <div class="form-group">
                 <label>Email</label>
                 <input type="email" name="part_email" value="<%= part.part_email %>" required>
@@ -48,12 +54,14 @@
 
             <div class="form-group">
                 <label>Birth Date</label>
+                <!-- Format to autofill properly -->
                 <input type="date" name="part_dob" value="<%= part.part_dob ? part.part_dob.toISOString().split('T')[0] : '' %>">
             </div>
 
             <div class="form-group">
                 <label>Role</label>
                 <select name="part_role">
+                    <!-- Selection -->
                     <option value="p" <%= part.part_role === "p" ? "selected" : "" %>>Participant</option>
                     <option value="a" <%= part.part_role === "a" ? "selected" : "" %>>Admin</option>
                 </select>
@@ -82,11 +90,6 @@
             <div class="form-group">
                 <label>School / Employer</label>
                 <input type="text" name="part_school_or_employer" value="<%= part.part_school_or_employer %>">
-            </div>
-
-            <div class="form-group">
-                <label>Total Donations</label>
-                <input type="number" step="0.01" name="total_donations" value="<%= part.total_donations %>">
             </div>
 
             <button type="submit" class="submit-btn">Save Changes</button>

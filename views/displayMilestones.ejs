@@ -1,8 +1,12 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page is the view to see all milestones tied to a single participant -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Use EJS to show the users name at the top -->
     <title><%= participant.part_first_name %> Milestones</title>
 
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -22,17 +26,24 @@
 
     <a href="/viewPart" class="back-btn">← Back to Participants</a>
 
+    <!-- Also show users name at the top of the container here -->
     <div class="container">
         <h1><%= participant.part_first_name %> <%= participant.part_last_name %> — Milestones</h1>
 
+        <!-- Check for error message -->
         <% if (error_message) { %>
             <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- Add button only for managers -->
+        <% if (level === "m") { %>
         <div class="add-btn-container">
+            <!-- Link to add a milestone for the participant -->
             <a href="/milestones/<%= participant.part_id %>/add" class="add-btn">Add Milestone</a>
         </div>
+        <% } %>
 
+        <!-- Make sure there are even milestones to list -->
         <% if (milestones.length > 0) { %>
         <table>
             <thead>
@@ -40,18 +51,24 @@
                     <th>#</th>
                     <th>Title</th>
                     <th>Date</th>
+                    <% if (level === "m") { %>
                     <th>Edit</th>
                     <th>Delete</th>
+                    <% } %>
                 </tr>
             </thead>
 
             <tbody>
+                <!-- For each milestone, list these values -->
                 <% milestones.forEach(ms => { %>
                     <tr>
                         <td><%= ms.milestone_number %></td>
                         <td><%= ms.milestone_title %></td>
+                        <!-- Formatting the date to look better -->
                         <td><%= ms.milestone_date.toISOString().split("T")[0] %></td>
 
+                        <!-- Adding edit and delete buttons for milestones only for managers -->
+                        <% if (level === "m") { %>
                         <td>
                             <form action="/milestones/<%= participant.part_id %>/edit/<%= ms.milestone_number %>" method="get">
                                 <input class="action-btn" type="submit" value="Edit" />
@@ -63,6 +80,7 @@
                                 <input class="action-btn" type="submit" value="Delete" />
                             </form>
                         </td>
+                        <% } %>
                     </tr>
                 <% }) %>
             </tbody>

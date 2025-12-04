@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page has a form so managers can add a Milestone to a specific user -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,15 +23,18 @@
         </div>
     </div>
 
+    <!-- Leads back to the list of milestones for the user we are focused on -->
     <a href="/milestones/<%= participant.part_id %>" class="back-btn">← Back to Milestones</a>
 
     <div class="container">
         <h1>Add Milestone</h1>
 
+        <!-- check for error message -->
         <% if (error_message) { %>
             <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- Post on the route tied to the specific user -->
         <form action="/milestones/<%= participant.part_id %>/add" method="POST">
 
             <div class="form-group">
