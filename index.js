@@ -82,8 +82,8 @@ const knex = require("knex")({
         host : process.env.RDS_HOSTNAME || "localhost",
         user : process.env.RDS_USERNAME || "postgres",
         password : process.env.RDS_PASSWORD || "admin",
-        database : process.env.RDS_DB_NAME || "ellarises", // ----- CHANGE TO DATABASE NAME -----
-        port : process.env.RDS_PORT || 5432,  // PostgreSQL 16 typically uses port 5434
+        database : process.env.RDS_DB_NAME || "ellarises",
+        port : process.env.RDS_PORT || 5432,
         ssl : process.env.DB_SSL ? {rejectUnauthorized: false} : false
     }
 });
@@ -95,7 +95,6 @@ app.use("/styles", express.static(__dirname + "/styles"));
 app.use(express.urlencoded({extended: true}));
 
 // Global authentication middleware - runs on EVERY request
-// ----- WE WILL MODIFY THIS TO PROTECT THE APPROPRIATE ROUTES -----
 app.use((req, res, next) => {
     // Skip authentication for login routes
     if (req.path === '/' || req.path === '/login' || req.path === '/logout' || req.path === '/signup' || req.path === '/addSignUp' || req.path === '/donationImpact') {
@@ -106,8 +105,8 @@ app.use((req, res, next) => {
     // Check if user is logged in for all other routes
     if (req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent')) {
         return next(); // User is logged in, continue
-    } 
-    else if (!req.session.isLoggedIn && req.path === '/viewPart'){
+    } // If they are not logged in
+    else if (!req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent')){
         return res.render("login", { error_message: "Please log in to access this page" });
     }
 
@@ -135,63 +134,80 @@ app.get("/logout", (req, res) => {
     });
 });
 
-
+// Render the landing page
 app.get("/", (req, res) => {
     res.render("index", {level: req.session.level, login: req.session.isLoggedIn})
 })
 
+// Route for login page
 app.get("/login", (req, res) => {
     res.render("login", { error_message: "" })
 })
 
+// Route for signup page
 app.get("/signup", (req, res) => {
     res.render("signup", { error_message: "" })
 })
 
+// View to see list of participants
 app.get("/viewPart", (req, res) => {
     knex.select().from("participant_info").then(parts => {
+        // Make sure we know the level and list of participants
         res.render("viewPart", {level: req.session.level, parts: parts, error_message: ""})
     })
+    // for DB errors
     .catch(err => {
         console.error("Participant error:", err);
         res.render("viewPart", {level: req.session.level, parts: [], error_message: "Participant Table cannot be found" });
     });
 })
 
+// Route to display a table of participants based off of their search
 app.get("/searchPart", (req, res) => {
+    // Show all if they search an empty search bar
     if (req.query.emailSearch === "") {
         return res.redirect("/viewPart");
     }
 
+    // Display participants where the email is equal to the search bar
     knex.select().from("participant_info").where("part_email", req.query.emailSearch).then(parts => {
         res.render("viewPart", {level: req.session.level, parts: parts, error_message: ""})
     })
+    // DB error handling
     .catch(err => {
         console.error("Participant error:", err);
         res.render("viewPart", {level: req.session.level, parts: [], error_message: "Participant Table cannot be found" });
     });
 })
 
+// Route to get to the view to add a participant
 app.get("/addPart", (req, res) => {
+    // middleware already does this but make sure that they are a manager
     if (req.session.level === "m") {
         res.render("addPart", {error_message: ""})
+    // if they are not a manager
     } else {
         res.redirect("/")
     }
 })
 
+// Route to get the view to edit a participant
 app.get("/editPart/:part_id", (req, res) => {
+    // Make sure user us a manager
     if (req.session.level === "m") {
+        // edit the participant that was passed into the get route
         knex.select().from("participant_info").where("part_id", req.params.part_id).first().then(part => {
+            // Make sure the participant exists
             if (!part) {
                 return res.status(404).render("viewPart", {
                     level: req.session.level,
                     parts: [],
-                    error_message: "Part not found."
+                    error_message: "Participant not found."
                 });
             }
             res.render("editPart", {part: part, error_message: ""})
         })
+        // db error handling
         .catch((err) => {
             console.error("Error fetching part:", err.message);
             res.status(500).render("viewPart", {
@@ -200,6 +216,7 @@ app.get("/editPart/:part_id", (req, res) => {
                 error_message: "Unable to load participant for editing."
             });
         });
+    // if they are not a manager
     } else {
         res.redirect("/")
     }
@@ -210,30 +227,36 @@ app.get("/editPart/:part_id", (req, res) => {
 
 // View all users (master only)
 app.get("/viewUsers", (req, res) => {
+    // Make sure user is a manager
     if (req.session.level !== "m") {
         return res.redirect("/");
     }
 
+    // grab users from users table
     knex.select().from("users").then(users => {
         res.render("viewUsers", { level: req.session.level, users: users, error_message: "" });
     })
+    // db errors
     .catch(err => {
         console.error("Users error:", err);
         res.render("viewUsers", { level: req.session.level, users: [], error_message: "Users table cannot be found" });
     });
 });
 
+// Returns the users table but only where the user email matches the search
 app.get("/searchUser", (req, res) => {
     if (req.session.level !== "m") {
         return res.redirect("/");
     }
+    // return all users if the search bar is submitted empty
     if (req.query.emailSearch === "") {
         return res.redirect("/viewUsers");
     }
-
+    // return searched user
     knex.select().from("users").where("email", req.query.emailSearch).then(users => {
         res.render("viewUsers", { level: req.session.level, users: users, error_message: "" });
     })
+    // db error
     .catch(err => {
         console.error("Users error:", err);
         res.render("viewUsers", { level: req.session.level, users: [], error_message: "Users table cannot be found" });
@@ -243,6 +266,7 @@ app.get("/searchUser", (req, res) => {
 // Add user page
 app.get("/addUser", (req, res) => {
     if (req.session.level === "m") {
+        // render the page if user is a manager level
         res.render("addUser", { error_message: "" });
     } else {
         res.redirect("/");
@@ -251,19 +275,23 @@ app.get("/addUser", (req, res) => {
 
 // Edit user page
 app.get("/editUser/:user_id", (req, res) => {
+    // make sure manager
     if (req.session.level === "m") {
         knex("users")
             .where("user_id", req.params.user_id)
             .first()
             .then(user => {
+                // make sure the user to edit exists
                 if (!user) {
                     return res.status(404).render("viewUsers", {
                         users: [],
                         error_message: "User not found."
                     });
                 }
+                // render the edit page
                 res.render("editUser", { user: user, error_message: "" });
             })
+            // db errors
             .catch(err => {
                 console.error("Edit user error:", err);
                 res.status(500).render("viewUsers", {
@@ -272,6 +300,7 @@ app.get("/editUser/:user_id", (req, res) => {
                 });
             });
     } else {
+        // if user isnt manager
         res.redirect("/");
     }
 });
@@ -281,10 +310,12 @@ app.get("/editUser/:user_id", (req, res) => {
 ----------- POST ROUTES -----------
 ----------------------------------*/
 
+// Make sure login credentials are valid
 app.post("/login", (req, res) => {
     let email = req.body.email;
     let password = req.body.password;
 
+    // grab user where login matches
     knex.select("email", "password", "level")
         .from('users')
         .where("email", email)
@@ -307,8 +338,9 @@ app.post("/login", (req, res) => {
         });
 });
 
+// POST to add a participant
 app.post("/addPart", (req, res) => {
-
+    // pull all form fields from the request
     const {
         part_email,
         part_first_name,
@@ -323,7 +355,7 @@ app.post("/addPart", (req, res) => {
         total_donations
     } = req.body;
 
-    // Required fields check
+    // make sure nothing important was left blank
     if (!part_email || !part_first_name || !part_last_name || !part_dob ||
         !part_role || !part_phone || !part_city || !part_state || !part_zip ||
         !part_school_or_employer || !total_donations) {
@@ -331,6 +363,7 @@ app.post("/addPart", (req, res) => {
         return res.status(400).render("addPart", { error_message: "All fields are required." });
     }
 
+    // check if this email is already being used by another participant
     return knex("participant_info")
         .where("part_email", part_email)
         .first()
@@ -339,6 +372,7 @@ app.post("/addPart", (req, res) => {
                 return res.render("addPart", { error_message: "Email is already in use" });
             }
 
+            // build the object we’ll insert into the table
             const newPart = {
                 part_email,
                 part_first_name,
@@ -353,6 +387,7 @@ app.post("/addPart", (req, res) => {
                 total_donations
             };
 
+            // save the new participant and go back to the list
             return knex("participant_info")
                 .insert(newPart)
                 .then(() => res.redirect("/viewPart"));
@@ -365,16 +400,21 @@ app.post("/addPart", (req, res) => {
         });
 }); 
 
+
+// POST to update an existing participant
 app.post("/editPart/:part_id", (req, res) => {
     const partId = req.params.part_id;
+
+    // fields coming back from the edit form
     const {part_email, part_first_name, part_last_name, part_dob, part_role, part_phone, part_city, part_state, part_zip, part_school_or_employer, total_donations} = req.body;
 
-    // Required fields check
+    // check for missing required fields
     if (
         !part_email || !part_first_name || !part_last_name || !part_dob ||
         !part_role || !part_phone || !part_city || !part_state ||
         !part_zip || !part_school_or_employer || !total_donations
     ) {
+        // reload the participant so we can re-fill the form with their info
         return knex("participant_info")
             .where({ part_id: partId })
             .first()
@@ -402,7 +442,7 @@ app.post("/editPart/:part_id", (req, res) => {
             });
     }
 
-    // 1. Load original participant to compare email
+    // grab the original record so we can compare emails
     knex("participant_info")
         .where({ part_id: partId })
         .first()
@@ -415,7 +455,7 @@ app.post("/editPart/:part_id", (req, res) => {
                 });
             }
 
-            // 2. If email has NOT changed → update immediately
+            // if the email stayed the same, no need to check duplicates
             if (originalPart.part_email === part_email) {
                 const updatedPart = {
                     part_email,
@@ -431,26 +471,27 @@ app.post("/editPart/:part_id", (req, res) => {
                     total_donations
                 };
 
+                // update the record and return to the list
                 return knex("participant_info")
                     .where({ part_id: partId })
                     .update(updatedPart)
                     .then(() => res.redirect("/viewPart"));
             }
 
-            // 3. Email WAS changed → check for duplicate email
+            // email changed, so we check if someone else is using it
             return knex("participant_info")
                 .where({ part_email })
                 .first()
                 .then(existing => {
                     if (existing) {
-                        // Email is already used by another participant
+                        // someone else already has this email
                         return res.render("editPart", {
                             part: originalPart,
                             error_message: "Email is already in use"
                         });
                     }
 
-                    // 4. Email is free → update safely
+                    // new email is available, so update with the new info
                     const updatedPart = {
                         part_email,
                         part_first_name,
@@ -464,7 +505,7 @@ app.post("/editPart/:part_id", (req, res) => {
                         part_school_or_employer,
                         total_donations
                     };
-
+                    // apply the update now that the email is valid
                     return knex("participant_info")
                         .where({ part_id: partId })
                         .update(updatedPart)
@@ -474,6 +515,7 @@ app.post("/editPart/:part_id", (req, res) => {
         .catch(err => {
             console.error("Error updating participant:", err.message);
 
+            // reload the participant so we can show an error message
             return knex("participant_info")
                 .where({ part_id: partId })
                 .first()
@@ -486,6 +528,7 @@ app.post("/editPart/:part_id", (req, res) => {
                         });
                     }
 
+                    // show error on edit page with their info filled in
                     return res.status(500).render("editPart", {
                         part,
                         error_message: "Unable to update participant. Please try again."
@@ -493,6 +536,8 @@ app.post("/editPart/:part_id", (req, res) => {
                 })
                 .catch(fetchErr => {
                     console.error("Error fetching participant after update failure:", fetchErr.message);
+
+                    // fallback if we can't reload anything
                     return res.status(500).render("viewPart", {
                         level: req.session.level,
                         parts: [],
@@ -504,59 +549,66 @@ app.post("/editPart/:part_id", (req, res) => {
 
 
 
-                                                            // User Data
-// Add user
+// ------------------------------------------------------
+//                      User Data
+// ------------------------------------------------------
+
+// Add user from manager page
 app.post("/addUser", (req, res) => {
     const { email, password, level } = req.body;
 
+    // basic required field check
     if (!email || !password || !level) {
         return res.status(400).render("addUser", { error_message: "All fields are required." });
     }
 
+    // make sure email isn't already taken
     knex.select().from("users").where("email", email).first().then(user => {
         if (user) {
             return res.render("addUser", { error_message: "Email is already in use" });
         }
 
-    const newUser = { email, password, level };
+        // build and insert new user
+        const newUser = { email, password, level };
 
-    return knex("users")
-        .insert(newUser)
-        .then(() => {
-            return res.redirect("/viewUsers");
-        })
+        return knex("users")
+            .insert(newUser)
+            .then(() => res.redirect("/viewUsers"));
     })
-        .catch(dbErr => {
-            console.error("Add user error:", dbErr.message);
-            res.status(500).render("addUser", { error_message: "Unable to save user. Please try again." });
-        });
+    .catch(dbErr => {
+        console.error("Add user error:", dbErr.message);
+        res.status(500).render("addUser", { error_message: "Unable to save user. Please try again." });
+    });
 });
 
+// Add user from signup page
 app.post("/addSignUp", (req, res) => {
     const { email, password, level } = req.body;
 
+    // signup needs email + password
     if (!email || !password) {
         return res.status(400).render("signup", { error_message: "All fields are required." });
     }
 
+    // check if email is already used
     knex.select().from("users").where("email", email).first().then(user => {
         if (user) {
             return res.render("signup", { error_message: "Email is already in use" });
         }
 
+        // create user and send them to login
         const newUser = { email, password, level };
 
         return knex("users")
             .insert(newUser)
-            .then(() => {
-                return res.redirect("/login");
-            })
+            .then(() => res.redirect("/login"));
     })
-        .catch(dbErr => {
-            console.error("Add user error:", dbErr.message);
-            res.status(500).render("signup", { error_message: "Unable to save user. Please try again." });
-        });
+    .catch(dbErr => {
+        console.error("Add user error:", dbErr.message);
+        res.status(500).render("signup", { error_message: "Unable to save user. Please try again." });
+    });
 });
+
 
 
 
@@ -592,7 +644,7 @@ app.post("/editUser/:user_id", (req, res) => {
             });
     }
 
-    // 1. Load the original user so we can check if they changed the email
+    // Load the original user to check chanaged email
     knex("users")
         .where({ user_id: userId })
         .first()
@@ -604,7 +656,7 @@ app.post("/editUser/:user_id", (req, res) => {
                 });
             }
 
-            // 2. If email has NOT changed, skip duplicate check
+            // If email has NOT changed, skip duplicate check
             if (originalUser.email === email) {
                 const updatedUser = { email, password, level };
                 return knex("users")
@@ -613,7 +665,7 @@ app.post("/editUser/:user_id", (req, res) => {
                     .then(() => res.redirect("/viewUsers"));
             }
 
-            // 3. If email HAS changed, check for duplicates
+            // If email HAS changed, check for duplicates
             return knex("users")
                 .where({ email })
                 .first()
@@ -627,7 +679,7 @@ app.post("/editUser/:user_id", (req, res) => {
                         });
                     }
 
-                    // 4. Email is safe to use, update normally
+                    // Email is safe to use, update normally
                     const updatedUser = { email, password, level };
 
                     return knex("users")
@@ -636,6 +688,7 @@ app.post("/editUser/:user_id", (req, res) => {
                         .then(() => res.redirect("/viewUsers"));
                 });
         })
+        // db errors
         .catch(err => {
             console.error("Error updating user:", err);
             return knex("users")
@@ -647,6 +700,7 @@ app.post("/editUser/:user_id", (req, res) => {
                         error_message: "Unable to update user. Please try again."
                     });
                 })
+                // db errors
                 .catch(fetchErr => {
                     console.error("Post-update fetching error:", fetchErr);
                     return res.status(500).render("viewUsers", {
@@ -656,6 +710,7 @@ app.post("/editUser/:user_id", (req, res) => {
                 });
         });
 });
+
 // Delete user
 app.post("/deleteUser/:user_id", (req, res) => {
     knex("users")
@@ -675,26 +730,25 @@ app.post("/deleteUser/:user_id", (req, res) => {
 ---------- DELETE ROUTES ----------
 ----------------------------------*/
 
+// delete a participant and return to the list
 app.post("/deletePart/:part_id", (req, res) => {
-    knex("participant_info").where("part_id", req.params.part_id).del().then(parts => {
-        res.redirect("/viewPart");
-    }).catch(err => {
-        console.log(err);
-        res.status(500).json({err});
-    })
+    knex("participant_info")
+        .where("part_id", req.params.part_id)
+        .del()
+        .then(parts => {
+            res.redirect("/viewPart");
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({ err });
+        });
 });
 
-
-
-
-
-
-
-
-
+// show milestones for a single participant
 app.get("/milestones/:partId", (req, res) => {
     const partId = req.params.partId;
 
+    // load the participant first
     knex("participant_info")
         .where({ part_id: partId })
         .first()
@@ -707,6 +761,7 @@ app.get("/milestones/:partId", (req, res) => {
                 });
             }
 
+            // load their milestones
             knex("participant_milestones")
                 .where({ part_id: partId })
                 .orderBy("milestone_number")
@@ -718,7 +773,8 @@ app.get("/milestones/:partId", (req, res) => {
                         error_message: "",
                         success_message: ""
                     });
-                })
+                }) 
+                // db errors
                 .catch((err) => {
                     console.error("Error loading milestones:", err.message);
                     res.status(500).render("viewPart", {
@@ -728,6 +784,7 @@ app.get("/milestones/:partId", (req, res) => {
                     });
                 });
         })
+        // db error
         .catch((err) => {
             console.error("Error loading participant:", err.message);
             res.status(500).render("viewPart", {
@@ -739,9 +796,11 @@ app.get("/milestones/:partId", (req, res) => {
 });
 
 
+// show add milestone form
 app.get("/milestones/:partId/add", (req, res) => {
     const partId = req.params.partId;
 
+    // load participant
     knex("participant_info")
         .where({ part_id: partId })
         .first()
@@ -754,6 +813,7 @@ app.get("/milestones/:partId/add", (req, res) => {
                 });
             }
 
+            // render add milestone page
             res.render("addMilestone", {
                 level: req.session.level,
                 participant,
@@ -762,6 +822,7 @@ app.get("/milestones/:partId/add", (req, res) => {
         })
         .catch((err) => {
             console.error("Error loading participant:", err.message);
+            // db error handling
             res.status(500).render("viewPart", {
                 level: req.session.level,
                 parts: [],
@@ -770,10 +831,12 @@ app.get("/milestones/:partId/add", (req, res) => {
         });
 });
 
+// add milestone
 app.post("/milestones/:partId/add", (req, res) => {
     const partId = req.params.partId;
     const { milestone_title, milestone_date } = req.body;
 
+    // basic validation
     if (!milestone_title || !milestone_date) {
         return res.status(400).render("addMilestone", {
             level: req.session.level,
@@ -782,7 +845,7 @@ app.post("/milestones/:partId/add", (req, res) => {
         });
     }
 
-    // Determine next milestone number
+    // find next milestone number
     knex("participant_milestones")
         .where({ part_id: partId })
         .max("milestone_number as maxNum")
@@ -790,6 +853,7 @@ app.post("/milestones/:partId/add", (req, res) => {
         .then((result) => {
             const nextNumber = (result.maxNum || 0) + 1;
 
+            // insert new milestone
             return knex("participant_milestones").insert({
                 part_id: partId,
                 milestone_number: nextNumber,
@@ -798,10 +862,12 @@ app.post("/milestones/:partId/add", (req, res) => {
             });
         })
         .then(() => {
+            // redirect back to milestone list
             res.redirect(`/milestones/${partId}`);
         })
         .catch((err) => {
             console.error("Error adding milestone:", err.message);
+            // db error handling
             res.status(500).render("addMilestone", {
                 level: req.session.level,
                 participant: { part_id: partId },
@@ -810,9 +876,11 @@ app.post("/milestones/:partId/add", (req, res) => {
         });
 });
 
+// show edit milestone form
 app.get("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
     const { partId, milestoneNumber } = req.params;
 
+    // load milestone
     knex("participant_milestones")
         .where({
             part_id: partId,
@@ -829,6 +897,7 @@ app.get("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
                 });
             }
 
+            // render edit page
             res.render("editMilestone", {
                 level: req.session.level,
                 milestone,
@@ -838,6 +907,7 @@ app.get("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
         })
         .catch((err) => {
             console.error("Error loading milestone:", err.message);
+            // db error handling
             res.status(500).render("displayMilestones", {
                 level: req.session.level,
                 participant: { part_id: partId },
@@ -847,15 +917,18 @@ app.get("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
         });
 });
 
+// Edit milestone
 app.post("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
     const { partId, milestoneNumber } = req.params;
     const { milestone_title, milestone_date } = req.body;
 
+    // greb specific milestone
     knex("participant_milestones")
         .where({
             part_id: partId,
             milestone_number: milestoneNumber
         })
+        // update milestone
         .update({
             milestone_title,
             milestone_date
@@ -863,6 +936,7 @@ app.post("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
         .then(() => {
             res.redirect(`/milestones/${partId}`);
         })
+        // db error handling
         .catch((err) => {
             console.error("Error updating milestone:", err.message);
             res.status(500).render("editMilestone", {
@@ -873,16 +947,20 @@ app.post("/milestones/:partId/edit/:milestoneNumber", (req, res) => {
         });
 });
 
+// Delete miletsone
 app.post("/milestones/:partId/delete/:milestoneNumber", (req, res) => {
     const { partId, milestoneNumber } = req.params;
 
+    // grab specific milestone
     knex("participant_milestones")
         .where({
             part_id: partId,
             milestone_number: milestoneNumber
         })
+        // delete it
         .del()
         .then(() => {
+            // go back to milestones for that user
             res.redirect(`/milestones/${partId}`);
         })
         .catch((err) => {
@@ -891,23 +969,18 @@ app.post("/milestones/:partId/delete/:milestoneNumber", (req, res) => {
         });
 });
 
-
-
-
-
-
-
-
-
 /* --------------------------------
 ------------ EVENTS PAGE ----------
 ----------------------------------*/
 
 // View all event occurrences
 app.get("/viewEvents", (req, res) => {
+    // kinda like a more intense sql script here
     knex("event_occurrences as eo")
+        // Join tables
         .join("event_templates as et", "eo.event_id", "et.event_id")
         .join("location_capacities as lc", "eo.location_id", "lc.location_id")
+        // select what we need
         .select(
             "eo.event_occurrence_id",
             "et.event_name",
@@ -921,6 +994,7 @@ app.get("/viewEvents", (req, res) => {
             "lc.location_capacity"
         )
         .orderBy("eo.event_start_date_time")
+        // show page to list all events
         .then(events => {
             res.render("viewEvents", {
                 level: req.session.level,
@@ -928,6 +1002,7 @@ app.get("/viewEvents", (req, res) => {
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error loading events:", err.message);
             res.render("viewEvents", {
@@ -938,15 +1013,18 @@ app.get("/viewEvents", (req, res) => {
         });
 });
 
+// Again letting us search events
 app.get("/searchEvent", (req, res) => {
     if (req.query.eventName === "") {
         return res.redirect("/viewEvents");
     }
 
     knex("event_occurrences as eo")
+        // joining tables to get all we need
         .join("event_templates as et", "eo.event_id", "et.event_id")
         .join("location_capacities as lc", "eo.location_id", "lc.location_id")
         .where("et.event_name", req.query.eventName)
+        // selecting everything we need
         .select(
             "eo.event_occurrence_id",
             "et.event_name",
@@ -959,6 +1037,7 @@ app.get("/searchEvent", (req, res) => {
             "lc.location_name",
             "lc.location_capacity"
         )
+        // show events table with whatever we searched
         .then(events => {
             res.render("viewEvents", {
                 level: req.session.level,
@@ -966,6 +1045,7 @@ app.get("/searchEvent", (req, res) => {
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error searching events:", err.message);
             res.render("viewEvents", {
@@ -976,16 +1056,20 @@ app.get("/searchEvent", (req, res) => {
         });
 });
 
+// GET route to add an evemt
 app.get("/addEvent", (req, res) => {
+    // Make sure user is a manaegr
     if (req.session.level !== "m") {
         return res.redirect("/");
     }
 
+    // perform all async operations before continuing
     Promise.all([
         knex("event_templates").select(),
         knex("location_capacities").select()
     ])
         .then(([templates, locations]) => {
+            // get out add events page with the templates and locations ready to be selected from
             res.render("addEvent", {
                 level: req.session.level,
                 templates,
@@ -993,6 +1077,7 @@ app.get("/addEvent", (req, res) => {
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error loading addEvent page:", err.message);
             res.render("addEvent", {
@@ -1004,14 +1089,18 @@ app.get("/addEvent", (req, res) => {
         });
 });
 
+// POST when event is being added to add it to the db
 app.post("/addEvent", (req, res) => {
     const { event_id, event_start_date_time, event_end_date_time, location_id, event_registration_deadline } = req.body;
 
+    // make sure everything is filled out
     if (!event_id || !event_start_date_time || !event_end_date_time || !location_id || !event_registration_deadline) {
+        // perform all async operations before continuing
         return Promise.all([
             knex("event_templates").select(),
             knex("location_capacities").select()
         ]).then(([templates, locations]) => {
+            // get out add events page with the templates and locations ready to be selected from
             res.status(400).render("addEvent", {
                 level: req.session.level,
                 templates,
@@ -1021,6 +1110,7 @@ app.post("/addEvent", (req, res) => {
         });
     }
 
+    // create newEvent object
     const newEvent = {
         event_id,
         event_start_date_time,
@@ -1030,10 +1120,12 @@ app.post("/addEvent", (req, res) => {
     };
 
     knex("event_occurrences")
+    // insert the newEvent
         .insert(newEvent)
         .then(() => {
             res.redirect("/viewEvents");
         })
+        // db error handling
         .catch(err => {
             console.error("Error adding event:", err.message);
             res.status(500).render("addEvent", {
@@ -1045,19 +1137,24 @@ app.post("/addEvent", (req, res) => {
         });
 });
 
+// get route to let users edit an event
 app.get("/editEvent/:event_occurrence_id", (req, res) => {
+    // make sure they are a manager
     if (req.session.level !== "m") {
         return res.redirect("/");
     }
 
+    // grabbing the correct event occurence
     const eventOccurrenceId = req.params.event_occurrence_id;
 
+    // perform all async operations before continuing
     Promise.all([
         knex("event_occurrences").where({ event_occurrence_id: eventOccurrenceId }).first(),
         knex("event_templates").select(),
         knex("location_capacities").select()
     ])
         .then(([event, templates, locations]) => {
+            // if the event doesnt exist
             if (!event) {
                 return res.status(404).render("viewEvents", {
                     level: req.session.level,
@@ -1066,6 +1163,7 @@ app.get("/editEvent/:event_occurrence_id", (req, res) => {
                 });
             }
 
+            // render edit page with the correct info for the event
             res.render("editEvent", {
                 level: req.session.level,
                 event,
@@ -1074,6 +1172,7 @@ app.get("/editEvent/:event_occurrence_id", (req, res) => {
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error loading editEvent page:", err.message);
             res.status(500).render("viewEvents", {
@@ -1083,10 +1182,15 @@ app.get("/editEvent/:event_occurrence_id", (req, res) => {
             });
         });
 });
+
+// POST route to send the edited event to the DB
 app.post("/editEvent/:event_occurrence_id", (req, res) => {
+    // grabbing the id
     const eventOccurrenceId = req.params.event_occurrence_id;
+    // Getting all of the data from the form
     const { event_id, event_start_date_time, event_end_date_time, location_id, event_registration_deadline } = req.body;
 
+    // Changed event object to udpate
     const updatedEvent = {
         event_id,
         event_start_date_time,
@@ -1095,12 +1199,14 @@ app.post("/editEvent/:event_occurrence_id", (req, res) => {
         event_registration_deadline
     };
 
+    // Grab the original event and update it
     knex("event_occurrences")
         .where({ event_occurrence_id: eventOccurrenceId })
         .update(updatedEvent)
         .then(() => {
             res.redirect("/viewEvents");
         })
+        // db error handling
         .catch(err => {
             console.error("Error updating event:", err.message);
             res.status(500).render("editEvent", {
@@ -1110,36 +1216,27 @@ app.post("/editEvent/:event_occurrence_id", (req, res) => {
         });
 });
 
+// POST route to delete the event
 app.post("/deleteEvent/:event_occurrence_id", (req, res) => {
+    // Grab event
     knex("event_occurrences")
         .where({ event_occurrence_id: req.params.event_occurrence_id })
+        // and delete it
         .del()
         .then(() => {
             res.redirect("/viewEvents");
         })
+        // db error handlign
         .catch(err => {
             console.error("Error deleting event:", err.message);
             res.status(500).json({ err });
         });
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// GET route to view all of the milestones
 app.get("/viewAllMilestones", (req, res) => {
     knex("participant_milestones as pm")
+    // joining tables to get participant name and email
         .join("participant_info as pi", "pm.part_id", "pi.part_id")
         .select(
             "pm.part_id",
@@ -1150,14 +1247,17 @@ app.get("/viewAllMilestones", (req, res) => {
             "pi.part_first_name",
             "pi.part_last_name"
         )
+        // order the list
         .orderBy(["pm.part_id", "pm.milestone_number"])
         .then(milestones => {
+            // render the view page
             res.render("viewAllMilestones", {
                 level: req.session.level,
                 milestones,
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error loading milestones:", err.message);
             res.render("viewAllMilestones", {
@@ -1168,22 +1268,26 @@ app.get("/viewAllMilestones", (req, res) => {
         });
 });
 
-
+// get route to add a milestone to the overall list
 app.get("/addMilestoneGlobal", (req, res) => {
+    // make sure user is a manager
     if (req.session.level !== "m") {
         return res.redirect("/");
     }
 
+    // get participant info
     knex("participant_info")
         .select("part_id", "part_email", "part_first_name", "part_last_name")
         .orderBy("part_last_name")
         .then(parts => {
+            // load up the page to link to a selected participant
             res.render("addMilestoneGlobal", {
                 level: req.session.level,
                 parts,
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error loading participants:", err.message);
             res.render("addMilestoneGlobal", {
@@ -1194,9 +1298,12 @@ app.get("/addMilestoneGlobal", (req, res) => {
         });
 });
 
+// send the added participant to the database
 app.post("/addMilestoneGlobal", (req, res) => {
+    // form inputs
     const { part_id, milestone_title, milestone_date } = req.body;
 
+    // Making all iputs are filled in
     if (!part_id || !milestone_title || !milestone_date) {
         return knex("participant_info")
             .select()
@@ -1215,9 +1322,11 @@ app.post("/addMilestoneGlobal", (req, res) => {
         .max("milestone_number as maxNum")
         .first()
         .then(result => {
+            // to increase number for the next milestone for that participant
             const nextNum = (result.maxNum || 0) + 1;
 
             return knex("participant_milestones")
+            // insert all of the new info
                 .insert({
                     part_id,
                     milestone_number: nextNum,
@@ -1228,12 +1337,14 @@ app.post("/addMilestoneGlobal", (req, res) => {
                     res.redirect("/viewAllMilestones");
                 });
         })
+        // db error handling
         .catch(err => {
             console.error("Error adding milestone:", err.message);
             res.status(500).redirect("/viewAllMilestones");
         });
 });
 
+// get route to edit a milestone on the global page for milestones
 app.get("/editMilestoneGlobal/:part_id/:milestone_number", (req, res) => {
     if (req.session.level !== "m") {
         return res.redirect("/");
@@ -1242,37 +1353,45 @@ app.get("/editMilestoneGlobal/:part_id/:milestone_number", (req, res) => {
     const partId = req.params.part_id;
     const milestoneNumber = req.params.milestone_number;
 
+    // grab the desired milestone
     knex("participant_milestones")
         .where({ part_id: partId, milestone_number: milestoneNumber })
         .first()
         .then(milestone => {
+            // make sure it exists
             if (!milestone) {
                 return res.redirect("/viewAllMilestones");
             }
 
+            // render the edit page with the milestone passed in
             res.render("editMilestoneGlobal", {
                 level: req.session.level,
                 milestone,
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error loading milestone:", err.message);
             res.redirect("/viewAllMilestones");
         });
 });
 
+//POST route to change the milestone
 app.post("/editMilestoneGlobal/:part_id/:milestone_number", (req, res) => {
     const partId = req.params.part_id;
     const milestoneNumber = req.params.milestone_number;
     const { milestone_title, milestone_date } = req.body;
 
+    // grab the og milestone
     knex("participant_milestones")
         .where({ part_id: partId, milestone_number: milestoneNumber })
+        // and update it 
         .update({
             milestone_title,
             milestone_date
         })
+        // take us back to all of the milestones
         .then(() => res.redirect("/viewAllMilestones"))
         .catch(err => {
             console.error("Error updating milestone:", err.message);
@@ -1280,27 +1399,34 @@ app.post("/editMilestoneGlobal/:part_id/:milestone_number", (req, res) => {
         });
 });
 
+// post route to delete a milestone
 app.post("/deleteMilestoneGlobal/:part_id/:milestone_number", (req, res) => {
     const partId = req.params.part_id;
     const milestoneNumber = req.params.milestone_number;
 
+    // grab the desired milestone
     knex("participant_milestones")
         .where({ part_id: partId, milestone_number: milestoneNumber })
+        // & delete it
         .del()
         .then(() => res.redirect("/viewAllMilestones"))
         .catch(err => {
+            // db error handling
             console.error("Error deleting milestone:", err.message);
             res.redirect("/viewAllMilestones");
         });
 });
 
+// Search capabilites for milestones
 app.get("/searchAllMilestones", (req, res) => {
     const search = req.query.search;
 
+    // if empty, return all milestones
     if (!search || search.trim() === "") {
         return res.redirect("/viewAllMilestones");
     }
 
+    // search db for searched text
     knex("participant_milestones as pm")
         .join("participant_info as pi", "pm.part_id", "pi.part_id")
         .select(
@@ -1312,16 +1438,21 @@ app.get("/searchAllMilestones", (req, res) => {
             "pi.part_first_name",
             "pi.part_last_name"
         )
+        // do a like to make it easier for the user
+        // for email
         .where("pi.part_email", "ilike", `%${search}%`)
+        // for milestone title
         .orWhere("pm.milestone_title", "ilike", `%${search}%`)
         .orderBy(["pm.part_id", "pm.milestone_number"])
         .then(milestones => {
+            // show milestone table with searched milestones/users
             res.render("viewAllMilestones", {
                 level: req.session.level,
                 milestones,
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error searching milestones:", err.message);
             res.render("viewAllMilestones", {
@@ -1332,13 +1463,9 @@ app.get("/searchAllMilestones", (req, res) => {
         });
 });
 
-
-
-
-
-
-
+// get route to view donations
 app.get("/viewAllDonations", (req, res) => {
+    // get the table and join to get participant name and email
     knex("participant_donations as pd")
         .join("participant_info as pi", "pd.part_id", "pi.part_id")
         .select(
@@ -1351,14 +1478,17 @@ app.get("/viewAllDonations", (req, res) => {
             "pi.part_last_name",
             "pi.total_donations"
         )
+        // order by the id and donation number
         .orderBy(["pd.part_id", "pd.donation_number"])
         .then(donations => {
+            // show all donations
             res.render("viewAllDonations", {
                 level: req.session.level,
                 donations,
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error loading donations:", err.message);
             res.render("viewAllDonations", {
@@ -1369,21 +1499,26 @@ app.get("/viewAllDonations", (req, res) => {
         });
 });
 
+// GET route to page to add a donation
 app.get("/addDonationGlobal", (req, res) => {
+    // make sure user is a manager
     if (req.session.level !== "m") {
         return res.redirect("/");
     }
 
+    // grab participants so that they can be displayed in a dropdown menu
     knex("participant_info")
         .select("part_id", "part_email", "part_first_name", "part_last_name")
         .orderBy("part_last_name")
         .then(parts => {
+            // render add page with dropdown for users ready
             res.render("addDonationGlobal", {
                 level: req.session.level,
                 parts,
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error loading participants:", err.message);
             res.render("addDonationGlobal", {
@@ -1394,9 +1529,12 @@ app.get("/addDonationGlobal", (req, res) => {
         });
 });
 
+// post route to add the donation to proper database tables
 app.post("/addDonationGlobal", (req, res) => {
+    // grab from form
     const { part_id, donation_date, donation_amount } = req.body;
 
+    // make sure fields are not empty
     if (!part_id || !donation_date || !donation_amount) {
         return knex("participant_info").select().then(parts => {
             res.status(400).render("addDonationGlobal", {
@@ -1407,6 +1545,7 @@ app.post("/addDonationGlobal", (req, res) => {
         });
     }
 
+    // grab the last donation number and add one to it to increment for the participant
     knex("participant_donations")
         .where({ part_id })
         .max("donation_number as maxNum")
@@ -1414,6 +1553,7 @@ app.post("/addDonationGlobal", (req, res) => {
         .then(result => {
             const nextNum = (result.maxNum || 0) + 1;
 
+            // insert the new record into the table
             return knex("participant_donations").insert({
                 part_id,
                 donation_number: nextNum,
@@ -1422,9 +1562,11 @@ app.post("/addDonationGlobal", (req, res) => {
             });
         })
         .then(() => {
+            // recalc this participant's total
             return knex("participant_info")
-                .where({ part_id })
+                .where({ part_id }) // current participant
                 .update({
+                    // set total_donations equal to the SUM of their donation_amount values
                     total_donations: knex.raw(`
                         (SELECT COALESCE(SUM(donation_amount), 0)
                             FROM participant_donations
@@ -1439,8 +1581,9 @@ app.post("/addDonationGlobal", (req, res) => {
         });
 });
 
-
+// get route to get to edit page for donations
 app.get("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
+    // make sure user is a manager
     if (req.session.level !== "m") {
         return res.redirect("/");
     }
@@ -1449,32 +1592,38 @@ app.get("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
     const donationNumber = req.params.donation_number;
 
     knex("participant_donations")
+        // grab the one we want to edit to autofill form
         .where({ part_id: partId, donation_number: donationNumber })
         .first()
         .then(donation => {
             if (!donation) return res.redirect("/viewAllDonations");
-
+            // render edit page
             res.render("editDonationGlobal", {
                 level: req.session.level,
                 donation,
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error loading donation:", err.message);
             res.redirect("/viewAllDonations");
         });
 });
 
+// post the edited donation to the donations table
 app.post("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
     const partId = req.params.part_id;
     const donationNumber = req.params.donation_number;
     const { donation_date, donation_amount } = req.body;
 
+    // grab og donation record
     knex("participant_donations")
         .where({ part_id: partId, donation_number: donationNumber })
+        // update it
         .update({ donation_date, donation_amount })
         .then(() => {
+            // Make sure to update total in the participant info table
             return knex("participant_info")
                 .where({ part_id: partId })
                 .update({
@@ -1485,6 +1634,7 @@ app.post("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
                     `, [partId])
                 });
         })
+        // go bakc to all donations page
         .then(() => res.redirect("/viewAllDonations"))
         .catch(err => {
             console.error("Error updating donation:", err.message);
@@ -1492,18 +1642,21 @@ app.post("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
         });
 });
 
-
+// Route to delete a donation
 app.post("/deleteDonationGlobal/:part_id/:donation_number", (req, res) => {
     const partId = req.params.part_id;
     const donationNumber = req.params.donation_number;
 
+    // Grab specific doantion
     knex("participant_donations")
         .where({ part_id: partId, donation_number: donationNumber })
+        // delete it
         .del()
         .then(() => {
             return knex("participant_info")
                 .where({ part_id: partId })
                 .update({
+                    // update participant info to change that participant's total
                     total_donations: knex.raw(`
                         (SELECT COALESCE(SUM(donation_amount), 0)
                             FROM participant_donations
@@ -1511,6 +1664,7 @@ app.post("/deleteDonationGlobal/:part_id/:donation_number", (req, res) => {
                     `, [partId])
                 });
         })
+        // go back to all donations
         .then(() => res.redirect("/viewAllDonations"))
         .catch(err => {
             console.error("Error deleting donation:", err.message);
@@ -1518,15 +1672,18 @@ app.post("/deleteDonationGlobal/:part_id/:donation_number", (req, res) => {
         });
 });
 
-
+// Search donations
 app.get("/searchAllDonations", (req, res) => {
     const search = req.query.search;
 
+    // if search is empty then show all
     if (!search || search.trim() === "") {
         return res.redirect("/viewAllDonations");
     }
 
+    // grab donation
     knex("participant_donations as pd")
+        // join the donater info onto it
         .join("participant_info as pi", "pd.part_id", "pi.part_id")
         .select(
             "pd.part_id",
@@ -1538,17 +1695,22 @@ app.get("/searchAllDonations", (req, res) => {
             "pi.part_last_name",
             "pi.total_donations"
         )
+        // using like to make the search a little easier for the user
+        // email
         .where("pi.part_email", "ilike", `%${search}%`)
+        // donation date
         .orWhereRaw("CAST(pd.donation_date AS TEXT) ILIKE ?", [`%${search}%`])
         .orderBy("pd.part_id")
         .orderBy("pd.donation_number")
         .then(donations => {
+            // render view all donations page
             res.render("viewAllDonations", {
                 level: req.session.level,
                 donations,
                 error_message: ""
             });
         })
+        // db error handling
         .catch(err => {
             console.error("Error searching donations:", err.message);
             res.render("viewAllDonations", {
@@ -1559,8 +1721,47 @@ app.get("/searchAllDonations", (req, res) => {
         });
 });
 
+// get page to see impact info
 app.get("/donationImpact", (req, res) => {
     res.render("donationImpact", { level: req.session.level, login: req.session.isLoggedIn } );
+});
+
+// page that brings up edd event template page
+app.get("/addEventTemplate", (req, res) => {
+    res.render("addEventTemplate", { error_message: "" });
+});
+
+// Create a new event template based on the form
+app.post("/addEventTemplate", (req, res) => {
+    const { event_name, event_type, event_description, event_recurrence, event_default_capacity } = req.body;
+
+    // insert new event into the templates
+    return knex("event_templates")
+        .insert({
+            event_name,
+            event_type,
+            event_description,
+            event_recurrence,
+            event_default_capacity
+        })
+        .then(() => res.redirect("/addEvent"))
+        // db error handling
+        .catch(err => res.render("addEventTemplate", { error_message: "Error saving template." }));
+});
+
+// page that brings up add location page
+app.get("/addLocation", (req, res) => {
+    res.render("addLocation", { error_message: null });
+});
+
+// create new location template
+app.post("/addLocation", (req, res) => {
+    const { location_name, location_capacity } = req.body;
+
+    return knex("location_capacities")
+        .insert({ location_name, location_capacity })
+        .then(() => res.redirect("/addEvent"))
+        .catch(err => res.render("addLocation", { error_message: "Error saving location." }));
 });
 
 /* ---------------------------------------------------------

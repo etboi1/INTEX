@@ -30,15 +30,21 @@
 
         <form action="/addEvent" method="POST">
 
-            <div class="form-group">
-                <label>Select Event Template</label>
-                <select name="event_id" required>
-                    <% templates.forEach(t => { %>
-                        <option value="<%= t.event_id %>">
-                            <%= t.event_name %> (<%= t.event_type %>)
-                        </option>
-                    <% }) %>
-                </select>
+            <div class="form-section">
+                <div class="section-header">
+                    <button class="mini-btn" onclick="window.location='/addEventTemplate'; return false;">+ Add Template</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Event Template</label>
+                    <select name="event_id" required>
+                        <% templates.forEach(t => { %>
+                            <option value="<%= t.event_id %>">
+                                <%= t.event_name %> (<%= t.event_type %>)
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">
@@ -51,15 +57,21 @@
                 <input type="datetime-local" name="event_end_date_time" required>
             </div>
 
-            <div class="form-group">
-                <label>Select Location</label>
-                <select name="location_id" required>
-                    <% locations.forEach(l => { %>
-                        <option value="<%= l.location_id %>">
-                            <%= l.location_name %> (capacity: <%= l.location_capacity %>)
-                        </option>
-                    <% }) %>
-                </select>
+            <div class="form-section">
+                <div class="section-header">
+                    <button class="mini-btn" onclick="window.location='/addLocation'; return false;">+ Add Location</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Location</label>
+                    <select name="location_id" required>
+                        <% locations.forEach(l => { %>
+                            <option value="<%= l.location_id %>">
+                                <%= l.location_name %> (capacity: <%= l.location_capacity %>)
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">

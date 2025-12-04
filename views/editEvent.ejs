@@ -30,16 +30,22 @@
 
         <form action="/editEvent/<%= event.event_occurrence_id %>" method="POST">
 
-            <div class="form-group">
-                <label>Event Template</label>
-                <select name="event_id">
-                    <% templates.forEach(t => { %>
-                        <option value="<%= t.event_id %>"
-                            <%= t.event_id === event.event_id ? "selected" : "" %>>
-                            <%= t.event_name %> (<%= t.event_type %>)
-                        </option>
-                    <% }) %>
-                </select>
+            <div class="form-section">
+                <div class="section-header">
+                    <button class="mini-btn" onclick="window.location='/addEventTemplate'; return false;">+ Add Template</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Event Template</label>
+                    <select name="event_id">
+                        <% templates.forEach(t => { %>
+                            <option value="<%= t.event_id %>"
+                                <%= t.event_id === event.event_id ? "selected" : "" %> >
+                                <%= t.event_name %> (<%= t.event_type %>)
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">
@@ -58,16 +64,22 @@
                     required>
             </div>
 
-            <div class="form-group">
-                <label>Location</label>
-                <select name="location_id">
-                    <% locations.forEach(l => { %>
-                        <option value="<%= l.location_id %>"
-                            <%= l.location_id === event.location_id ? "selected" : "" %>>
-                            <%= l.location_name %> (capacity: <%= l.location_capacity %>)
-                        </option>
-                    <% }) %>
-                </select>
+            <div class="form-section">
+                <div class="section-header">
+                    <button class="mini-btn" onclick="window.location='/addLocation'; return false;">+ Add Location</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Location</label>
+                    <select name="location_id">
+                        <% locations.forEach(l => { %>
+                            <option value="<%= l.location_id %>"
+                                <%= l.location_id === event.location_id ? "selected" : "" %> >
+                                <%= l.location_name %> (capacity: <%= l.location_capacity %>)
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">

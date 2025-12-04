@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Event Template</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/addStyles.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="brand">Ella Rises</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Log Out</a>
+        </div>
+    </div>
+
+    <a href="/addEvent" class="back-btn">← Back to Add Event</a>
+
+    <div class="container">
+        <h1>Add Event Template</h1>
+
+        <% if (error_message) { %>
+            <div class="error-box"><%= error_message %></div>
+        <% } %>
+
+        <form action="/addEventTemplate" method="POST">
+
+            <div class="form-group">
+                <label>Template Name</label>
+                <input type="text" name="event_name" required>
+            </div>
+
+            <div class="form-group">
+                <label>Event Type</label>
+                <input type="text" name="event_type" placeholder="Workshop, Leadership, Mentorship..." required>
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="event_description" rows="4" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Recurrence</label>
+                <select name="event_recurrence" required>
+                    <option value="One-time">One-time</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="Quarterly">Quarterly</option>
+                    <option value="Yearly">Yearly</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Default Capacity</label>
+                <input type="number" name="event_default_capacity" min="1" required>
+            </div>
+
+            <button type="submit" class="submit-btn">Save Template</button>
+        </form>
+    </div>
+
+</body>
+</html>
