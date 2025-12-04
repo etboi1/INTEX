@@ -97,7 +97,7 @@ app.use(express.urlencoded({extended: true}));
 // Global authentication middleware - runs on EVERY request
 app.use((req, res, next) => {
     // Skip authentication for login routes
-    if (req.path === '/' || req.path === '/login' || req.path === '/logout' || req.path === '/signup' || req.path === '/addSignUp' || req.path === '/donationImpact') {
+    if (req.path === '/' || req.path === '/login' || req.path === '/logout' || req.path === '/signup' || req.path === '/addSignUp' || req.path === '/donationImpact' || req.path === '/publicDonate' || req.path === '/privacy') {
         //continue with the request path
         return next();
     }
@@ -351,14 +351,13 @@ app.post("/addPart", (req, res) => {
         part_city,
         part_state,
         part_zip,
-        part_school_or_employer,
-        total_donations
+        part_school_or_employer
     } = req.body;
 
     // make sure nothing important was left blank
     if (!part_email || !part_first_name || !part_last_name || !part_dob ||
         !part_role || !part_phone || !part_city || !part_state || !part_zip ||
-        !part_school_or_employer || !total_donations) {
+        !part_school_or_employer) {
 
         return res.status(400).render("addPart", { error_message: "All fields are required." });
     }
@@ -383,8 +382,7 @@ app.post("/addPart", (req, res) => {
                 part_city,
                 part_state,
                 part_zip,
-                part_school_or_employer,
-                total_donations
+                part_school_or_employer
             };
 
             // save the new participant and go back to the list
@@ -406,13 +404,13 @@ app.post("/editPart/:part_id", (req, res) => {
     const partId = req.params.part_id;
 
     // fields coming back from the edit form
-    const {part_email, part_first_name, part_last_name, part_dob, part_role, part_phone, part_city, part_state, part_zip, part_school_or_employer, total_donations} = req.body;
+    const {part_email, part_first_name, part_last_name, part_dob, part_role, part_phone, part_city, part_state, part_zip, part_school_or_employer} = req.body;
 
     // check for missing required fields
     if (
         !part_email || !part_first_name || !part_last_name || !part_dob ||
         !part_role || !part_phone || !part_city || !part_state ||
-        !part_zip || !part_school_or_employer || !total_donations
+        !part_zip || !part_school_or_employer
     ) {
         // reload the participant so we can re-fill the form with their info
         return knex("participant_info")
@@ -467,8 +465,7 @@ app.post("/editPart/:part_id", (req, res) => {
                     part_city,
                     part_state,
                     part_zip,
-                    part_school_or_employer,
-                    total_donations
+                    part_school_or_employer
                 };
 
                 // update the record and return to the list
@@ -502,8 +499,7 @@ app.post("/editPart/:part_id", (req, res) => {
                         part_city,
                         part_state,
                         part_zip,
-                        part_school_or_employer,
-                        total_donations
+                        part_school_or_employer
                     };
                     // apply the update now that the email is valid
                     return knex("participant_info")
@@ -1465,7 +1461,7 @@ app.get("/searchAllMilestones", (req, res) => {
 
 // get route to view donations
 app.get("/viewAllDonations", (req, res) => {
-    // get the table and join to get participant name and email
+    // get donations and join participant info
     knex("participant_donations as pd")
         .join("participant_info as pi", "pd.part_id", "pi.part_id")
         .select(
@@ -1476,12 +1472,17 @@ app.get("/viewAllDonations", (req, res) => {
             "pi.part_email",
             "pi.part_first_name",
             "pi.part_last_name",
-            "pi.total_donations"
+            // calc total donations on the fly
+            knex.raw(`(
+                SELECT COALESCE(SUM(donation_amount), 0)
+                FROM participant_donations
+                WHERE part_id = pd.part_id
+            ) AS total_donations`)
         )
-        // order by the id and donation number
+        // order by participant then donation number
         .orderBy(["pd.part_id", "pd.donation_number"])
         .then(donations => {
-            // show all donations
+            // render page w/ results
             res.render("viewAllDonations", {
                 level: req.session.level,
                 donations,
@@ -1499,19 +1500,17 @@ app.get("/viewAllDonations", (req, res) => {
         });
 });
 
-// GET route to page to add a donation
+// GET: show global add donation page
 app.get("/addDonationGlobal", (req, res) => {
-    // make sure user is a manager
-    if (req.session.level !== "m") {
-        return res.redirect("/");
-    }
+    // make sure user is manager
+    if (req.session.level !== "m") return res.redirect("/");
 
-    // grab participants so that they can be displayed in a dropdown menu
+    // load participants for dropdown
     knex("participant_info")
         .select("part_id", "part_email", "part_first_name", "part_last_name")
         .orderBy("part_last_name")
         .then(parts => {
-            // render add page with dropdown for users ready
+            // render add page
             res.render("addDonationGlobal", {
                 level: req.session.level,
                 parts,
@@ -1529,12 +1528,12 @@ app.get("/addDonationGlobal", (req, res) => {
         });
 });
 
-// post route to add the donation to proper database tables
+// POST: add a donation
 app.post("/addDonationGlobal", (req, res) => {
-    // grab from form
+    // fields from form
     const { part_id, donation_date, donation_amount } = req.body;
 
-    // make sure fields are not empty
+    // validation
     if (!part_id || !donation_date || !donation_amount) {
         return knex("participant_info").select().then(parts => {
             res.status(400).render("addDonationGlobal", {
@@ -1545,7 +1544,7 @@ app.post("/addDonationGlobal", (req, res) => {
         });
     }
 
-    // grab the last donation number and add one to it to increment for the participant
+    // find next donation number
     knex("participant_donations")
         .where({ part_id })
         .max("donation_number as maxNum")
@@ -1553,7 +1552,7 @@ app.post("/addDonationGlobal", (req, res) => {
         .then(result => {
             const nextNum = (result.maxNum || 0) + 1;
 
-            // insert the new record into the table
+            // insert donation
             return knex("participant_donations").insert({
                 part_id,
                 donation_number: nextNum,
@@ -1561,19 +1560,7 @@ app.post("/addDonationGlobal", (req, res) => {
                 donation_amount
             });
         })
-        .then(() => {
-            // recalc this participant's total
-            return knex("participant_info")
-                .where({ part_id }) // current participant
-                .update({
-                    // set total_donations equal to the SUM of their donation_amount values
-                    total_donations: knex.raw(`
-                        (SELECT COALESCE(SUM(donation_amount), 0)
-                            FROM participant_donations
-                            WHERE part_id = ?)
-                    `, [part_id])
-                });
-        })
+        // go back to all donations
         .then(() => res.redirect("/viewAllDonations"))
         .catch(err => {
             console.error("Error adding donation:", err.message);
@@ -1581,22 +1568,21 @@ app.post("/addDonationGlobal", (req, res) => {
         });
 });
 
-// get route to get to edit page for donations
+// GET: edit donation page
 app.get("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
-    // make sure user is a manager
-    if (req.session.level !== "m") {
-        return res.redirect("/");
-    }
+    // only managers
+    if (req.session.level !== "m") return res.redirect("/");
 
     const partId = req.params.part_id;
     const donationNumber = req.params.donation_number;
 
+    // get the donation to autofill
     knex("participant_donations")
-        // grab the one we want to edit to autofill form
         .where({ part_id: partId, donation_number: donationNumber })
         .first()
         .then(donation => {
             if (!donation) return res.redirect("/viewAllDonations");
+
             // render edit page
             res.render("editDonationGlobal", {
                 level: req.session.level,
@@ -1611,30 +1597,17 @@ app.get("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
         });
 });
 
-// post the edited donation to the donations table
+// POST: save edited donation
 app.post("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
     const partId = req.params.part_id;
     const donationNumber = req.params.donation_number;
     const { donation_date, donation_amount } = req.body;
 
-    // grab og donation record
+    // update donation
     knex("participant_donations")
         .where({ part_id: partId, donation_number: donationNumber })
-        // update it
         .update({ donation_date, donation_amount })
-        .then(() => {
-            // Make sure to update total in the participant info table
-            return knex("participant_info")
-                .where({ part_id: partId })
-                .update({
-                    total_donations: knex.raw(`
-                        (SELECT COALESCE(SUM(donation_amount), 0)
-                            FROM participant_donations
-                            WHERE part_id = ?)
-                    `, [partId])
-                });
-        })
-        // go bakc to all donations page
+        // go back to all donations
         .then(() => res.redirect("/viewAllDonations"))
         .catch(err => {
             console.error("Error updating donation:", err.message);
@@ -1642,28 +1615,15 @@ app.post("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
         });
 });
 
-// Route to delete a donation
+// delete donation
 app.post("/deleteDonationGlobal/:part_id/:donation_number", (req, res) => {
     const partId = req.params.part_id;
     const donationNumber = req.params.donation_number;
 
-    // Grab specific doantion
+    // delete donation
     knex("participant_donations")
         .where({ part_id: partId, donation_number: donationNumber })
-        // delete it
         .del()
-        .then(() => {
-            return knex("participant_info")
-                .where({ part_id: partId })
-                .update({
-                    // update participant info to change that participant's total
-                    total_donations: knex.raw(`
-                        (SELECT COALESCE(SUM(donation_amount), 0)
-                            FROM participant_donations
-                            WHERE part_id = ?)
-                    `, [partId])
-                });
-        })
         // go back to all donations
         .then(() => res.redirect("/viewAllDonations"))
         .catch(err => {
@@ -1672,18 +1632,15 @@ app.post("/deleteDonationGlobal/:part_id/:donation_number", (req, res) => {
         });
 });
 
-// Search donations
+// search donations
 app.get("/searchAllDonations", (req, res) => {
     const search = req.query.search;
 
-    // if search is empty then show all
-    if (!search || search.trim() === "") {
-        return res.redirect("/viewAllDonations");
-    }
+    // if empty, show all
+    if (!search || search.trim() === "") return res.redirect("/viewAllDonations");
 
-    // grab donation
+    // search donations + totals
     knex("participant_donations as pd")
-        // join the donater info onto it
         .join("participant_info as pi", "pd.part_id", "pi.part_id")
         .select(
             "pd.part_id",
@@ -1693,17 +1650,21 @@ app.get("/searchAllDonations", (req, res) => {
             "pi.part_email",
             "pi.part_first_name",
             "pi.part_last_name",
-            "pi.total_donations"
+            // dynamic total
+            knex.raw(`(
+                SELECT COALESCE(SUM(donation_amount), 0)
+                FROM participant_donations
+                WHERE part_id = pd.part_id
+            ) AS total_donations`)
         )
-        // using like to make the search a little easier for the user
-        // email
+        // search filters
         .where("pi.part_email", "ilike", `%${search}%`)
-        // donation date
         .orWhereRaw("CAST(pd.donation_date AS TEXT) ILIKE ?", [`%${search}%`])
+        // ordering
         .orderBy("pd.part_id")
         .orderBy("pd.donation_number")
         .then(donations => {
-            // render view all donations page
+            // show results
             res.render("viewAllDonations", {
                 level: req.session.level,
                 donations,
@@ -1720,6 +1681,7 @@ app.get("/searchAllDonations", (req, res) => {
             });
         });
 });
+
 
 // get page to see impact info
 app.get("/donationImpact", (req, res) => {
@@ -1763,6 +1725,106 @@ app.post("/addLocation", (req, res) => {
         .then(() => res.redirect("/addEvent"))
         .catch(err => res.render("addLocation", { error_message: "Error saving location." }));
 });
+
+// public donation page (no login required)
+app.get("/publicDonate", (req, res) => {
+    // render public donation form
+    res.render("publicDonate", {
+        error_message: "",
+        success_message: ""
+    });
+});
+
+// submit public donation form
+app.post("/publicDonate", async (req, res) => {
+    const {
+        part_email,
+        part_first_name,
+        part_last_name,
+        part_dob,
+        part_phone,
+        part_city,
+        part_state,
+        part_zip,
+        part_school_or_employer,
+        donation_amount,
+        donation_date
+    } = req.body;
+
+    // quick validation
+    if (!part_email || !donation_amount || !donation_date) {
+        return res.status(400).render("publicDonate", {
+            error_message: "Email, donation date, and amount are required.",
+            success_message: ""
+        });
+    }
+
+    try {
+        // check if participant already exists
+        let participant = await knex("participant_info")
+            .where({ part_email })
+            .first();
+
+        let partId;
+
+        if (!participant) {
+            // create new participant
+            const [newId] = await knex("participant_info")
+                .insert({
+                    part_email,
+                    part_first_name,
+                    part_last_name,
+                    part_dob,
+                    part_role: "p", // default role
+                    part_phone,
+                    part_city,
+                    part_state,
+                    part_zip,
+                    part_school_or_employer
+                })
+                .returning("part_id");
+
+            partId = newId.part_id;
+        } else {
+            // use existing participant
+            partId = participant.part_id;
+        }
+
+        // find next donation number
+        const result = await knex("participant_donations")
+            .where({ part_id: partId })
+            .max("donation_number as maxNum")
+            .first();
+
+        const nextNum = (result.maxNum || 0) + 1;
+
+        // insert donation
+        await knex("participant_donations").insert({
+            part_id: partId,
+            donation_number: nextNum,
+            donation_date,
+            donation_amount
+        });
+
+        // success page
+        res.render("publicDonate", {
+            error_message: "",
+            success_message: "Thank you! Your donation has been recorded."
+        });
+
+    } catch (err) {
+        console.error("Error processing public donation:", err.message);
+        res.status(500).render("publicDonate", {
+            error_message: "Unable to process your donation right now.",
+            success_message: ""
+        });
+    }
+});
+
+app.get("/privacy", (req, res) => {
+    res.sendStatus(418);
+})
+
 
 /* ---------------------------------------------------------
 ---------- SET UP SERVER TO LISTEN ON DESIRED PORT ---------
