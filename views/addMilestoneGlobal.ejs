@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page includes a form for managers to add milestones to the GLOBAL milestone table that is shown -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,21 +23,25 @@
         </div>
     </div>
 
+    <!-- back button -->
     <a href="/viewAllMilestones" class="back-btn">← Back to Milestones</a>
 
     <div class="container">
         <h1>Add Milestone</h1>
 
+        <!-- Checking for error message -->
         <% if (error_message) { %>
         <div class="error-box"><%= error_message %></div>
         <% } %>
 
         <form action="/addMilestoneGlobal" method="POST">
 
+            <!-- Select participant -->
             <div class="form-group">
                 <label>Participant</label>
                 <select name="part_id" required>
                     <option value="">Select Participant</option>
+                    <!-- A dropdown of all participants to select from -->
                     <% parts.forEach(p => { %>
                         <option value="<%= p.part_id %>">
                             <%= p.part_first_name %> <%= p.part_last_name %> - <%= p.part_email %>

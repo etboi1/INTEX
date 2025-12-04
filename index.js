@@ -103,7 +103,8 @@ app.use((req, res, next) => {
     }
     
     // Check if user is logged in for all other routes
-    if (req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent')) {
+    // certain parts of this let users access any users milestones without the manager permissions to manipulate using includes and startsWith
+    if (req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent' || (req.path.startsWith("/milestones/") && !req.path.includes("/edit") && !req.path.includes("/delete") && !req.path.includes("/add")))) {
         return next(); // User is logged in, continue
     } // If they are not logged in
     else if (!req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent')){

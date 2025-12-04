@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page is for managers to add donations to the global donations page (showing all donations from anyone) -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,16 +28,19 @@
     <div class="container">
         <h1>Add Donation</h1>
 
+        <!-- Check if there is an error message -->
         <% if (error_message) { %>
         <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- POST form -->
         <form action="/addDonationGlobal" method="POST">
 
             <div class="form-group">
                 <label>Select Participant</label>
                 <select name="part_id" required>
                     <option value="">Select Participant</option>
+                    <!-- Dropdown list of all participants in the database to select from -->
                     <% parts.forEach(p => { %>
                         <option value="<%= p.part_id %>">
                             <%= p.part_first_name %> <%= p.part_last_name %> — <%= p.part_email %>
@@ -49,6 +55,7 @@
             </div>
 
             <div class="form-group">
+                <!-- Currency style with the step -->
                 <label>Donation Amount</label>
                 <input type="number" step="0.01" name="donation_amount" required>
             </div>

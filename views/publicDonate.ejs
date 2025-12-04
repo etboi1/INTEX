@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page is where users can donate. If they are not yet a participant a record will be made -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,12 +23,15 @@
     <div class="container">
         <h1>Make a Donation</h1>
 
+        <!-- Easy button to go back -->
         <a href="/donationImpact" class="back-btn">← Back to Impact Page</a>
 
+        <!-- Error Message -->
         <% if (error_message) { %>
             <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- Success Message -->
         <% if (success_message) { %>
             <div class="success-box"><%= success_message %></div>
         <% } %>
@@ -34,6 +40,7 @@
 
             <h2>Participant Information</h2>
 
+            <!-- Make sure we have at elast email, first name, last name, and donation info so we can check everything -->
             <label>Email *</label>
             <input type="email" name="part_email" required>
 

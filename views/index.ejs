@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This is the main landing page. It has navigation to any other page and also can link to the 418 status code and the donations/impact pages -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,6 +21,7 @@
         <div class="nav-left">
             <a href="/" class="nav-brand">Ella Rises</a>
             <a href="/viewPart" class="nav-link">Participants</a>
+            <!-- Only managers can view users -->
             <% if (level === "m") { %>
             <a href="/viewUsers" class="nav-link">Users</a>
             <% } %>
@@ -27,6 +31,7 @@
             <a href="/viewAllDonations" class="nav-link">Donations</a>
         </div>
 
+        <!-- Different button based on login status -->
         <div class="nav-right">
             <% if (login) { %>
             <a href="/logout" class="nav-login">Log Out</a>
@@ -50,8 +55,10 @@
             Our mission is to build confidence, spark dreams, and open doors to opportunity.
         </p>
 
+        <!-- Lets users register -->
         <a href="/enroll" class="btn-main">Enroll Now</a>
         &nbsp;&nbsp;
+        <!-- Leads to impact page -->
         <a href="/donationImpact" class="btn-main">Support Us</a>
     </div>
 
@@ -109,7 +116,9 @@
             </p>
 
             <div class="donate-buttons">
+                <!-- Donation page -->
                 <a href="/publicDonate" class="btn-donateD">Donate</a>
+                <!-- Impact page -->
                 <a href="/donationImpact" class="btn-impactD">Your Impact</a>
             </div>
         </div>
@@ -129,6 +138,7 @@
     <footer>
         &copy; <%= new Date().getFullYear() %> Ella Rises. 
         All rights reserved. 
+        <!-- 418 Status Code page -->
         &nbsp;|&nbsp; <a href="/privacy">Privacy Policy</a>
     </footer>
 

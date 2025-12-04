@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page allows users to edit events in the DB -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,25 +22,30 @@
         </div>
     </div>
 
+    <!--  Back button -->
     <a href="/viewEvents" class="back-btn">← Back to Events</a>
 
     <div class="container">
         <h1>Edit Event</h1>
 
+        <!-- Check for error message -->
         <% if (error_message) { %>
             <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- Submit button for the edit -->
         <form action="/editEvent/<%= event.event_occurrence_id %>" method="POST">
 
             <div class="form-section">
                 <div class="section-header">
+                    <!-- Add template to the event templates table -->
                     <button class="mini-btn" onclick="window.location='/addEventTemplate'; return false;">+ Add Template</button>
                 </div>
 
                 <div class="form-group">
                     <label>Event Template</label>
                     <select name="event_id">
+                        <!-- Dropdown of event templates to choose from -->
                         <% templates.forEach(t => { %>
                             <option value="<%= t.event_id %>"
                                 <%= t.event_id === event.event_id ? "selected" : "" %> >
@@ -48,6 +56,7 @@
                 </div>
             </div>
 
+            <!-- All dates are formatted to autofill properly -->
             <div class="form-group">
                 <label>Start Date & Time</label>
                 <input type="datetime-local" 
@@ -66,12 +75,14 @@
 
             <div class="form-section">
                 <div class="section-header">
+                    <!-- Button to add location to the correct table -->
                     <button class="mini-btn" onclick="window.location='/addLocation'; return false;">+ Add Location</button>
                 </div>
 
                 <div class="form-group">
                     <label>Location</label>
                     <select name="location_id">
+                        <!-- Dropdown for all locations in the locations table -->
                         <% locations.forEach(l => { %>
                             <option value="<%= l.location_id %>"
                                 <%= l.location_id === event.location_id ? "selected" : "" %> >

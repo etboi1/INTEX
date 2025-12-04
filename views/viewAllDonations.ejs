@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page is where anyone can view ALL donations on one page. Managers have permissions to manipulate -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,6 +23,7 @@
         </div>
     </div>
 
+    <!-- Search bar -->
     <div style="padding-top: 20px;">
         <form method="GET" action="/searchAllDonations" style="text-align:center; margin-bottom:20px;">
             <input 
@@ -36,10 +40,12 @@
         </form>
     </div>
 
+    <!-- Error message -->
     <% if (error_message) { %>
         <div class="error-box"><%= error_message %></div>
     <% } %>
 
+    <!-- Add button for managers -->
     <div class="add-btn-container">
         <% if (level === "m") { %>
         <a href="/addDonationGlobal" class="add-btn">Add Donation</a>
@@ -62,6 +68,7 @@
                         <th>Date</th>
                         <th>Amount</th>
                         <th>Total</th>
+                        <!-- Edit and Delete for managers only -->
                         <% if (level === "m") { %>
                         <th>Edit</th>
                         <th>Delete</th>
@@ -70,6 +77,7 @@
                 </thead>
 
                 <tbody>
+                    <!-- For each loop to get each donation info -->
                     <% donations.forEach(d => { %>
                         <tr>
                             <td><%= d.part_email %></td>
@@ -77,6 +85,7 @@
                             <td><%= d.part_last_name %></td>
                             <td><%= d.donation_number %></td>
                             <td>
+                                <!-- Format date to look good -->
                                 <% if (d.donation_date) { %>
                                     <%= d.donation_date.toISOString().split("T")[0] %>
                                 <% } else { %>
@@ -86,6 +95,7 @@
                             <td>$<%= d.donation_amount %></td>
                             <td>$<%= d.total_donations %></td>
 
+                            <!-- Only managers have edit and delete buttons -->
                             <% if (level === "m") { %>
                             <td>
                                 <form action="/editDonationGlobal/<%= d.part_id %>/<%= d.donation_number %>" method="get">
@@ -104,6 +114,7 @@
                 </tbody>
             </table>
             </div>
+            <!-- If there are no donations in the table -->
         <% } else { %>
             <div class="empty">No donations found.</div>
         <% } %>

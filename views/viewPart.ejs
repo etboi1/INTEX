@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page allows anyone to view participants. Managers can manipulate -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,6 +23,7 @@
         </div>
     </div>
 
+    <!-- Search bar -->
     <div style="padding-top: 20px;">
     <form method="GET" action="/searchPart" style="text-align:center; margin-bottom:20px;">
         <input type="text" name="emailSearch" placeholder="Search by email..." style="padding:10px; width:60%; border:2px solid #FFD8D1; border-radius:10px;"/>
@@ -31,6 +35,7 @@
     </form>
     </div>
 
+    <!-- Error message -->
     <% if (error_message && error_message !== "") { %>
         <div class="error-box">
             <%= error_message %>
@@ -39,6 +44,7 @@
         </div>
     <% } %>
 
+    <!-- Add button only for managers -->
     <div class="add-btn-container">
         <% if (level === "m") { %>
         <a href="/addPart" class="add-btn">Add Participant</a>
@@ -49,6 +55,7 @@
     <div class="container">
         <h1>All Participants</h1>
 
+        <!-- make sure there are participants in the table -->
         <% if (parts && parts.length > 0) { %>
             <div class="table-wrapper">
             <table>
@@ -64,19 +71,22 @@
                         <th>State</th>
                         <th>Zip</th>
                         <th>School or Employer</th>
+                        <!-- Edit and delete are only seen for managers -->
                         <% if (level === "m") { %>
                         <th>Edit</th>
                         <th>Delete</th>
-                        <th>Milestones</th>
                         <% } %>
+                        <th>Milestones</th>
                     </tr>
                 </thead>
 
                 <tbody>
+                    <!-- For each participant, display their data -->
                     <% parts.forEach(part => { 
                         // Format date safely
                         let dob = "";
                         if (part.part_dob) {
+                            <!-- Format for a cleaner view -->
                             dob = part.part_dob.toISOString().split("T")[0];
                         }
                     %>
@@ -85,6 +95,7 @@
                             <td><%= part.part_first_name %></td>
                             <td><%= part.part_last_name %></td>
                             <td><%= dob %></td>
+                            <!-- Make sure it displays full title instead of just "p" or "a" -->
                             <td><% if (part.part_role === "p") { %>Participant<% } else { %>Admin<% } %></td>
                             <td><%= part.part_phone.toString().replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3") %></td>
                             <td><%= part.part_city %></td>
@@ -92,6 +103,7 @@
                             <td><%= part.part_zip %></td>
                             <td><%= part.part_school_or_employer %></td>
 
+                            <!-- Edit and delete buttons for managers only -->
                             <% if (level === "m") { %>
                             <td>
                                 <form action="/editPart/<%= part.part_id %>" method="get">
@@ -106,6 +118,7 @@
                             </td>
                             <% } %>
                             <td>
+                                <!-- Anyone can view milestones for this participant -->
                                 <form action="/milestones/<%= part.part_id %>" method="get">
                                     <input class="ms-action-btn" type="submit" value="Milestones" />
                                 </form>
@@ -116,6 +129,7 @@
             </table>
             </div>
 
+            <!-- If there is no data in the table -->
         <% } else { %>
             <div class="empty">No users found.</div>
         <% } %>

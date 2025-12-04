@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- Page where users without an account can sign up. Participant level is automatic -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,6 +17,7 @@
         rel="stylesheet"
     />
 
+    <!-- CSS Styling -->
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
@@ -146,6 +150,7 @@
                 </div>
             <% } %>
 
+            <!-- Form to create a new user with auto participant level -->
             <form action="/addSignUp" method="POST">
 
                 <!-- Email -->
@@ -172,6 +177,7 @@
                     >
                 </div>
 
+                <!-- Hidden but automatically sets level -->
                 <input type="hidden" name="level" value="u">
 
                 <button type="submit" class="btn btn-main w-100">

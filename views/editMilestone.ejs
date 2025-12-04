@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page allows users to edit milestones linked to a specific participant -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,15 +23,18 @@
         </div>
     </div>
 
+    <!-- Go back to the table of milestones for the particular participant -->
     <a href="/milestones/<%= participantId %>" class="back-btn">← Back to Milestones</a>
 
     <div class="container">
         <h1>Edit Milestone</h1>
 
+        <!-- Check for error message -->
         <% if (error_message) { %>
             <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- Submit the edit that is linked to the specific participant -->
         <form action="/milestones/<%= participantId %>/edit/<%= milestone.milestone_number %>" method="POST">
 
             <div class="form-group">
@@ -38,6 +44,7 @@
 
             <div class="form-group">
                 <label>Milestone Date</label>
+                <!-- Format to autofill properly -->
                 <input type="date" name="milestone_date" 
                     value="<%= milestone.milestone_date.toISOString().split('T')[0] %>" 
                     required>

@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page has a form for Managers to add an event template to the database -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,10 +27,12 @@
     <div class="container">
         <h1>Add Event Template</h1>
 
+        <!-- Checking for error message -->
         <% if (error_message) { %>
             <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- Post form for templates to add -->
         <form action="/addEventTemplate" method="POST">
 
             <div class="form-group">
@@ -40,11 +45,13 @@
                 <input type="text" name="event_type" placeholder="Workshop, Leadership, Mentorship..." required>
             </div>
 
+            <!-- text area for a textbox -->
             <div class="form-group">
                 <label>Description</label>
                 <textarea name="event_description" rows="4" required></textarea>
             </div>
 
+            <!-- These were our best guesses for options -->
             <div class="form-group">
                 <label>Recurrence</label>
                 <select name="event_recurrence" required>

@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page allows managers to  -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,10 +27,12 @@
     <div class="container">
         <h1>Add Location</h1>
 
+        <!-- Checking for error message -->
         <% if (error_message) { %>
             <div class="error-box"><%= error_message %></div>
         <% } %>
 
+        <!-- Post to add to database -->
         <form action="/addLocation" method="POST">
 
             <div class="form-group">

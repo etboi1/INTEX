@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page allows anyone to view the full list of milestones in the DB. Managers can manipulate -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,6 +23,7 @@
         </div>
     </div>
 
+    <!-- Search bar -->
     <div style="padding-top: 20px;">
         <form method="GET" action="/searchAllMilestones" style="text-align:center; margin-bottom:20px;">
             <input 
@@ -36,12 +40,14 @@
         </form>
     </div>
 
+    <!-- error message -->
     <% if (error_message) { %>
         <div class="error-box">
             <%= error_message %>
         </div>
     <% } %>
 
+    <!-- Add button for managers only -->
     <div class="add-btn-container">
         <% if (level === "m") { %>
         <a href="/addMilestoneGlobal" class="add-btn">Add Milestone</a>
@@ -52,6 +58,7 @@
     <div class="container">
         <h1>All Milestones</h1>
 
+        <!-- Make sure there are milestones in the DB -->
         <% if (milestones && milestones.length > 0) { %>
             <div class="table-wrapper">
                 <table>
@@ -62,6 +69,7 @@
                             <th>Last Name</th>
                             <th>Milestone</th>
                             <th>Date</th>
+                            <!-- Edit and delete headers only shown for managers -->
                             <% if (level === "m") { %>
                             <th>Edit</th>
                             <th>Delete</th>
@@ -70,6 +78,7 @@
                     </thead>
 
                     <tbody>
+                        <!-- For each milestone in the DB show the data -->
                         <% milestones.forEach(m => { %>
                             <tr>
                                 <td><%= m.part_email %></td>
@@ -78,6 +87,7 @@
                                 <td><%= m.milestone_title %></td>
                                 <td><%= m.milestone_date.toISOString().split("T")[0] %></td>
 
+                                <!-- Edit and Delete buttons only for managers -->
                                 <% if (level === "m") { %>
                                 <td>
                                     <form action="/editMilestoneGlobal/<%= m.part_id %>/<%= m.milestone_number %>" method="get">
@@ -96,6 +106,7 @@
                     </tbody>
                 </table>
             </div>
+        <!-- if table is empty -->
         <% } else { %>
             <div class="empty">No milestones found.</div>
         <% } %>

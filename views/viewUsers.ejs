@@ -1,3 +1,6 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- This page allows ONLY MANAGERS to view, edit, add, and delete user data -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,6 +34,7 @@
 </form>
 </div>
 
+<!-- Check for error message -->
 <% if (error_message && error_message !== "") { %>
     <div class="error-box">
         <%= error_message %>
@@ -39,6 +43,7 @@
     </div>
 <% } %>
 
+<!-- Only managers can access this page so no if needed -->
 <div class="add-btn-container">
     <a href="/addUser" class="add-btn">Add User</a>
     <a href="/viewUsers" class="add-btn">View All</a>
@@ -47,6 +52,7 @@
 <div class="container">
     <h1>All Users</h1>
 
+    <!-- make sure there are users -->
     <% if (users && users.length > 0) { %>
         <table>
             <thead>
@@ -64,8 +70,10 @@
                     <tr>
                         <td><%= user.email %></td>
                         <td><%= user.password %></td>
+                        <!-- display full level instead of single letter -->
                         <td><%= user.level === "m" ? "Manager" : "User" %></td>
 
+                        <!-- Edit and delete buttons -->
                         <td>
                             <form action="/editUser/<%= user.user_id %>" method="get">
                                 <input class="action-btn" type="submit" value="Edit" />
@@ -83,6 +91,7 @@
         </table>
 
     <% } else { %>
+        <!-- If no data in table -->
         <div class="empty">No users found.</div>
     <% } %>
 </div>
