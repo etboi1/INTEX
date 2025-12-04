@@ -64,7 +64,9 @@
                 <table>
                     <thead>
                         <tr>
+                            <% if (level === "m") { %>
                             <th>Email</th>
+                            <% } %>
                             <th>First Name</th>
                             <th>Last Name</th>
                             <th>Milestone</th>
@@ -81,7 +83,9 @@
                         <!-- For each milestone in the DB show the data -->
                         <% milestones.forEach(m => { %>
                             <tr>
+                                <% if (level === "m") { %>
                                 <td><%= m.part_email %></td>
+                                <% } %>
                                 <td><%= m.part_first_name %></td>
                                 <td><%= m.part_last_name %></td>
                                 <td><%= m.milestone_title %></td>

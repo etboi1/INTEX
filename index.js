@@ -1465,6 +1465,11 @@ app.get("/viewAllDonations", (req, res) => {
     // get donations and join participant info
     knex("participant_donations as pd")
         .join("participant_info as pi", "pd.part_id", "pi.part_id")
+        .modify(q => {
+            if (req.session.level === "u") {
+                q.where("pi.part_email", req.session.email);
+            }
+        })
         .select(
             "pd.part_id",
             "pd.donation_number",
@@ -1643,6 +1648,11 @@ app.get("/searchAllDonations", (req, res) => {
     // search donations + totals
     knex("participant_donations as pd")
         .join("participant_info as pi", "pd.part_id", "pi.part_id")
+        .modify(q => {
+            if (req.session.level === "u") {
+                q.where("pi.part_email", req.session.email);
+            }
+        })
         .select(
             "pd.part_id",
             "pd.donation_number",
@@ -1659,8 +1669,12 @@ app.get("/searchAllDonations", (req, res) => {
             ) AS total_donations`)
         )
         // search filters
-        .where("pi.part_email", "ilike", `%${search}%`)
-        .orWhereRaw("CAST(pd.donation_date AS TEXT) ILIKE ?", [`%${search}%`])
+        .modify(q => {
+            q.andWhere(function (inner) {
+                inner.where("pi.part_email", "ilike", `%${search}%`);
+                inner.orWhereRaw("CAST(pd.donation_date AS TEXT) ILIKE ?", [`%${search}%`]);
+            });
+        })
         // ordering
         .orderBy("pd.part_id")
         .orderBy("pd.donation_number")
@@ -1864,7 +1878,15 @@ app.get("/viewAllSurveys", (req, res) => {
             "et.event_name",
             "eo.event_start_date_time"
         )
+        
         .orderBy("s.survey_id", "asc");
+
+    surveyQuery.modify(q => {
+        if (req.session.level === "u") {
+            q.where("pi.part_email", req.session.email);
+        }
+    });
+
 
     // all question responses, grouped by survey_id in js
     const responsesQuery = knex("survey_question_responses")
@@ -1917,6 +1939,11 @@ app.get("/searchAllSurveys", (req, res) => {
         .leftJoin("participant_info as pi", "r.part_id", "pi.part_id")
         .leftJoin("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
         .leftJoin("event_templates as et", "eo.event_id", "et.event_id")
+        .modify(q => {
+            if (req.session.level === "u") {
+                q.where("pi.part_email", req.session.email);
+            }
+        })
         .select(
             "s.survey_id",
             "s.reg_id",
@@ -1930,8 +1957,12 @@ app.get("/searchAllSurveys", (req, res) => {
             "et.event_name",
             "eo.event_start_date_time"
         )
-        .where("pi.part_email", "ilike", `%${search}%`)
-        .orWhere("et.event_name", "ilike", `%${search}%`)
+        .modify(q => {
+            q.andWhere(function(inner) {
+                inner.where("pi.part_email", "ilike", `%${search}%`)
+                    .orWhere("et.event_name", "ilike", `%${search}%`);
+            });
+        })
         .orderBy("s.survey_id", "asc");
 
     const responsesQuery = knex("survey_question_responses")
