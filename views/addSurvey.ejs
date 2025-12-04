@@ -1,0 +1,79 @@
+<!-- Manager-only page to add a survey -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Survey</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/addStyles.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="brand">Ella Rises</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Log Out</a>
+        </div>
+    </div>
+
+    <a href="/viewAllSurveys" class="back-btn">← Back to Surveys</a>
+
+    <div class="container">
+        <h1>Add Survey</h1>
+
+        <% if (error_message) { %>
+            <div class="error-box"><%= error_message %></div>
+        <% } %>
+
+        <form action="/addSurvey" method="POST">
+            <div class="form-group">
+                <label>Registration (Participant – Event – Date)</label>
+                <select name="reg_id" required>
+                    <option value="">Select a registration...</option>
+                    <% registrations.forEach(reg => { 
+                        let eventDate = "";
+                        if (reg.event_start_date_time) {
+                            eventDate = reg.event_start_date_time.toISOString().split("T")[0];
+                        }
+                    %>
+                        <option value="<%= reg.reg_id %>">
+                            <%= (reg.part_first_name || "-") %> <%= (reg.part_last_name || "") %> -
+                            <%= reg.event_name || "-" %> -
+                            <%= eventDate || "-" %>
+                            (<%= reg.part_email || "-" %>)
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Overall Score</label>
+                <input type="number" name="survey_overall_score" required />
+            </div>
+
+            <div class="form-group">
+                <label>NPS Bucket</label>
+                <input type="text" name="nps_bucket" placeholder="Promoter / Passive / Detractor" required />
+            </div>
+
+            <div class="form-group">
+                <label>Comments</label>
+                <textarea name="survey_comments" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Submission Date</label>
+                <input type="date" name="survey_submission_date" required />
+            </div>
+
+            <button type="submit" class="submit-btn">Add Survey</button>
+        </form>
+    </div>
+
+</body>
+</html>
