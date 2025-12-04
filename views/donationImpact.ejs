@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Impact | Ella Rises</title>
+
+    <!-- Brand Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/mainStyles.css">
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="/" class="nav-brand">Ella Rises</a>
+            <a href="/viewPart" class="nav-link">Participants</a>
+            <% if (level === "m") { %>
+                <a href="/viewUsers" class="nav-link">Users</a>
+            <% } %>
+            <a href="/viewEvents" class="nav-link">Events</a>
+            <a href="/viewSurvey" class="nav-link">Survey</a>
+            <a href="/viewAllMilestones" class="nav-link">Milestones</a>
+            <a href="/viewAllDonations" class="nav-link">Donations</a>
+        </div>
+
+        <div class="nav-right">
+            <% if (login) { %>
+                <a href="/logout" class="nav-login">Log Out</a>
+            <% } else { %>
+                <a href="/login" class="nav-login">Login</a>
+            <% } %>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <header>
+        <h1 class="site-title">Your Donation Impact</h1>
+        <p class="tagline">See how your generosity fuels opportunity</p>
+    </header>
+
+    <!-- IMPACT CONTENT -->
+    <div class="impact-bg">
+
+        <div class="impact-card">
+
+            <h2>How Your Donations Make a Difference</h2>
+
+            <p>
+                Every contribution — no matter the size — opens doors for Latina youth.
+                Your support helps fund programs that foster confidence, education,
+                cultural pride, and leadership.
+            </p>
+
+            <ul class="impact-list">
+                <li>✨ $25 provides workshop supplies for a student</li>
+                <li>✨ $50 sponsors a girl to attend a mentoring event</li>
+                <li>✨ $100 funds STEM kits for hands-on exploration</li>
+                <li>✨ $250 supports a full leadership or creativity workshop</li>
+                <li>✨ $500 helps expand Ella Rises programs to new communities</li>
+            </ul>
+
+            <p>
+                Thank you for uplifting the next generation of Latina leaders.
+                Your kindness creates lasting change.
+            </p>
+
+            <div class="donate-buttons">
+                <a href="/donationImpact" class="nav-login">Donate Now!</a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        &copy; <%= new Date().getFullYear() %> Ella Rises.
+        All rights reserved. &nbsp;|&nbsp;
+        <a href="/contact">Contact Us</a> &nbsp;|&nbsp;
+        <a href="/privacy">Privacy Policy</a>
+    </footer>
+
+</body>
+</html>
