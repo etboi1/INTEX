@@ -97,17 +97,17 @@ app.use(express.urlencoded({extended: true}));
 // Global authentication middleware - runs on EVERY request
 app.use((req, res, next) => {
     // Skip authentication for login routes
-    if (req.path === '/' || req.path === '/login' || req.path === '/logout' || req.path === '/signup' || req.path === '/addSignUp' || req.path === '/donationImpact' || req.path === '/publicDonate' || req.path === '/privacy') {
+    if (req.path === '/' || req.path === '/login' || req.path === '/logout' || req.path === '/signup' || req.path === '/addSignUp' || req.path === '/donationImpact' || req.path === '/publicDonate' || req.path === '/privacy' || req.path === '/programs') {
         //continue with the request path
         return next();
     }
     
     // Check if user is logged in for all other routes
     // certain parts of this let users access any users milestones without the manager permissions to manipulate using includes and startsWith
-    if (req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent' || (req.path.startsWith("/milestones/") && !req.path.includes("/edit") && !req.path.includes("/delete") && !req.path.includes("/add")))) {
+    if (req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent' || req.path === '/viewAllSurveys' || req.path === '/searchAllSurveys' || (req.path.startsWith("/milestones/") && !req.path.includes("/edit") && !req.path.includes("/delete") && !req.path.includes("/add")))) {
         return next(); // User is logged in, continue
     } // If they are not logged in
-    else if (!req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent')){
+    else if (!req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent' || req.path === '/viewAllSurveys' || req.path === '/searchAllSurveys' || (req.path.startsWith("/milestones/") && !req.path.includes("/edit") && !req.path.includes("/delete") && !req.path.includes("/add")))) {
         return res.render("login", { error_message: "Please log in to access this page" });
     }
 
@@ -1689,6 +1689,11 @@ app.get("/donationImpact", (req, res) => {
     res.render("donationImpact", { level: req.session.level, login: req.session.isLoggedIn } );
 });
 
+// get page to see programs
+app.get("/programs", (req, res) => {
+    res.render("programs", { level: req.session.level, login: req.session.isLoggedIn } );
+});
+
 // page that brings up edd event template page
 app.get("/addEventTemplate", (req, res) => {
     res.render("addEventTemplate", { error_message: "" });
@@ -1825,6 +1830,401 @@ app.post("/publicDonate", async (req, res) => {
 app.get("/privacy", (req, res) => {
     res.sendStatus(418);
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+// View all surveys
+app.get("/viewAllSurveys", (req, res) => {
+    // main survey list with joined participant + event data
+    const surveyQuery = knex("surveys as s")
+        .leftJoin("registrations as r", "s.reg_id", "r.reg_id")
+        .leftJoin("participant_info as pi", "r.part_id", "pi.part_id")
+        .leftJoin("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
+        .leftJoin("event_templates as et", "eo.event_id", "et.event_id")
+        .select(
+            "s.survey_id",
+            "s.reg_id",
+            "s.survey_overall_score",
+            "s.nps_bucket",
+            "s.survey_comments",
+            "s.survey_submission_date",
+            "pi.part_email",
+            "pi.part_first_name",
+            "pi.part_last_name",
+            "et.event_name",
+            "eo.event_start_date_time"
+        )
+        .orderBy("s.survey_id", "asc");
+
+    // all question responses, grouped by survey_id in js
+    const responsesQuery = knex("survey_question_responses")
+        .select(
+            "survey_question_response_id",
+            "survey_id",
+            "survey_question",
+            "survey_response"
+        );
+
+    // perform all async operations before continuing
+    Promise.all([surveyQuery, responsesQuery])
+        .then(([surveys, responses]) => {
+            const responsesBySurvey = {};
+            responses.forEach(r => {
+                if (!responsesBySurvey[r.survey_id]) {
+                    responsesBySurvey[r.survey_id] = [];
+                }
+                responsesBySurvey[r.survey_id].push(r);
+            });
+
+            res.render("viewAllSurveys", {
+                level: req.session.level,
+                surveys,
+                responsesBySurvey,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading surveys:", err.message);
+            res.render("viewAllSurveys", {
+                level: req.session.level,
+                surveys: [],
+                responsesBySurvey: {},
+                error_message: "Unable to load surveys."
+            });
+        });
+});
+
+// Search surveys by participant email or event name
+app.get("/searchAllSurveys", (req, res) => {
+    const search = req.query.search;
+
+    if (!search || search.trim() === "") {
+        return res.redirect("/viewAllSurveys");
+    }
+
+    const surveyQuery = knex("surveys as s")
+        .leftJoin("registrations as r", "s.reg_id", "r.reg_id")
+        .leftJoin("participant_info as pi", "r.part_id", "pi.part_id")
+        .leftJoin("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
+        .leftJoin("event_templates as et", "eo.event_id", "et.event_id")
+        .select(
+            "s.survey_id",
+            "s.reg_id",
+            "s.survey_overall_score",
+            "s.nps_bucket",
+            "s.survey_comments",
+            "s.survey_submission_date",
+            "pi.part_email",
+            "pi.part_first_name",
+            "pi.part_last_name",
+            "et.event_name",
+            "eo.event_start_date_time"
+        )
+        .where("pi.part_email", "ilike", `%${search}%`)
+        .orWhere("et.event_name", "ilike", `%${search}%`)
+        .orderBy("s.survey_id", "asc");
+
+    const responsesQuery = knex("survey_question_responses")
+        .select(
+            "survey_question_response_id",
+            "survey_id",
+            "survey_question",
+            "survey_response"
+        );
+
+    Promise.all([surveyQuery, responsesQuery])
+        .then(([surveys, responses]) => {
+            const responsesBySurvey = {};
+            responses.forEach(r => {
+                if (!responsesBySurvey[r.survey_id]) {
+                    responsesBySurvey[r.survey_id] = [];
+                }
+                responsesBySurvey[r.survey_id].push(r);
+            });
+
+            res.render("viewAllSurveys", {
+                level: req.session.level,
+                surveys,
+                responsesBySurvey,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error searching surveys:", err.message);
+            res.render("viewAllSurveys", {
+                level: req.session.level,
+                surveys: [],
+                responsesBySurvey: {},
+                error_message: "Unable to search surveys."
+            });
+        });
+});
+
+// GET: add survey form (manager only)
+app.get("/addSurvey", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    // load registrations + participant + event context
+    knex("registrations as r")
+        .leftJoin("participant_info as pi", "r.part_id", "pi.part_id")
+        .leftJoin("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
+        .leftJoin("event_templates as et", "eo.event_id", "et.event_id")
+        .select(
+            "r.reg_id",
+            "pi.part_first_name",
+            "pi.part_last_name",
+            "pi.part_email",
+            "et.event_name",
+            "eo.event_start_date_time"
+        )
+        .orderBy("r.reg_id", "asc")
+        .then(registrations => {
+            res.render("addSurvey", {
+                level: req.session.level,
+                registrations,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading registrations for survey:", err.message);
+            res.render("addSurvey", {
+                level: req.session.level,
+                registrations: [],
+                error_message: "Unable to load registrations."
+            });
+        });
+});
+
+// POST: add survey (manager only)
+app.post("/addSurvey", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    const {
+        reg_id,
+        survey_overall_score,
+        nps_bucket,
+        survey_comments,
+        survey_submission_date
+    } = req.body;
+
+    if (!reg_id || !survey_overall_score || !nps_bucket || !survey_submission_date) {
+        // reload registrations so we can refill the form
+        return knex("registrations as r")
+            .leftJoin("participant_info as pi", "r.part_id", "pi.part_id")
+            .leftJoin("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
+            .leftJoin("event_templates as et", "eo.event_id", "et.event_id")
+            .select(
+                "r.reg_id",
+                "pi.part_first_name",
+                "pi.part_last_name",
+                "pi.part_email",
+                "et.event_name",
+                "eo.event_start_date_time"
+            )
+            .orderBy("r.reg_id", "asc")
+            .then(registrations => {
+                res.status(400).render("addSurvey", {
+                    level: req.session.level,
+                    registrations,
+                    error_message: "reg_id, overall score, NPS bucket, and submission date are required."
+                });
+            });
+    }
+
+    const newSurvey = {
+        reg_id,
+        survey_overall_score,
+        nps_bucket,
+        survey_comments,
+        survey_submission_date
+    };
+
+    knex("surveys")
+        .insert(newSurvey)
+        .then(() => res.redirect("/viewAllSurveys"))
+        .catch(err => {
+            console.error("Error adding survey:", err.message);
+            res.status(500).render("addSurvey", {
+                level: req.session.level,
+                registrations: [],
+                error_message: "Unable to save survey."
+            });
+        });
+});
+
+// GET: edit survey (manager only)
+app.get("/editSurvey/:survey_id", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    const surveyId = req.params.survey_id;
+
+    Promise.all([
+        knex("surveys").where({ survey_id: surveyId }).first(),
+        knex("registrations as r")
+            .leftJoin("participant_info as pi", "r.part_id", "pi.part_id")
+            .leftJoin("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
+            .leftJoin("event_templates as et", "eo.event_id", "et.event_id")
+            .select(
+                "r.reg_id",
+                "pi.part_first_name",
+                "pi.part_last_name",
+                "pi.part_email",
+                "et.event_name",
+                "eo.event_start_date_time"
+            )
+            .orderBy("r.reg_id", "asc")
+    ])
+        .then(([survey, registrations]) => {
+            if (!survey) {
+                return res.status(404).render("viewAllSurveys", {
+                    level: req.session.level,
+                    surveys: [],
+                    responsesBySurvey: {},
+                    error_message: "Survey not found."
+                });
+            }
+
+            res.render("editSurvey", {
+                level: req.session.level,
+                survey,
+                registrations,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading survey for edit:", err.message);
+            res.status(500).render("viewAllSurveys", {
+                level: req.session.level,
+                surveys: [],
+                responsesBySurvey: {},
+                error_message: "Unable to load survey for editing."
+            });
+        });
+});
+
+// POST: edit survey (manager only)
+app.post("/editSurvey/:survey_id", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    const surveyId = req.params.survey_id;
+    const {
+        reg_id,
+        survey_overall_score,
+        nps_bucket,
+        survey_comments,
+        survey_submission_date
+    } = req.body;
+
+    if (!reg_id || !survey_overall_score || !nps_bucket || !survey_submission_date) {
+        return Promise.all([
+            knex("surveys").where({ survey_id: surveyId }).first(),
+            knex("registrations as r")
+                .leftJoin("participant_info as pi", "r.part_id", "pi.part_id")
+                .leftJoin("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
+                .leftJoin("event_templates as et", "eo.event_id", "et.event_id")
+                .select(
+                    "r.reg_id",
+                    "pi.part_first_name",
+                    "pi.part_last_name",
+                    "pi.part_email",
+                    "et.event_name",
+                    "eo.event_start_date_time"
+                )
+                .orderBy("r.reg_id", "asc")
+        ])
+            .then(([survey, registrations]) => {
+                if (!survey) {
+                    return res.status(404).render("viewAllSurveys", {
+                        level: req.session.level,
+                        surveys: [],
+                        responsesBySurvey: {},
+                        error_message: "Survey not found."
+                    });
+                }
+
+                return res.status(400).render("editSurvey", {
+                    level: req.session.level,
+                    survey,
+                    registrations,
+                    error_message: "reg_id, overall score, NPS bucket, and submission date are required."
+                });
+            })
+            .catch(err => {
+                console.error("Error loading survey for validation:", err.message);
+                return res.status(500).render("viewAllSurveys", {
+                    level: req.session.level,
+                    surveys: [],
+                    responsesBySurvey: {},
+                    error_message: "Unable to update survey."
+                });
+            });
+    }
+
+    const updatedSurvey = {
+        reg_id,
+        survey_overall_score,
+        nps_bucket,
+        survey_comments,
+        survey_submission_date
+    };
+
+    knex("surveys")
+        .where({ survey_id: surveyId })
+        .update(updatedSurvey)
+        .then(() => res.redirect("/viewAllSurveys"))
+        .catch(err => {
+            console.error("Error updating survey:", err.message);
+            res.status(500).render("viewAllSurveys", {
+                level: req.session.level,
+                surveys: [],
+                responsesBySurvey: {},
+                error_message: "Unable to update survey."
+            });
+        });
+});
+
+// DELETE survey (manager only)
+app.post("/deleteSurvey/:survey_id", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    const surveyId = req.params.survey_id;
+
+    knex.transaction(trx => {
+        return trx("survey_question_responses")
+            .where({ survey_id: surveyId })
+            .del()
+            .then(() => {
+                return trx("surveys")
+                    .where({ survey_id: surveyId })
+                    .del();
+            });
+    })
+        .then(() => res.redirect("/viewAllSurveys"))
+        .catch(err => {
+            console.error("Error deleting survey:", err.message);
+            res.redirect("/viewAllSurveys");
+        });
+});
 
 
 /* ---------------------------------------------------------

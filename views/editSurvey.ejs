@@ -1,0 +1,95 @@
+<!-- Manager-only page to edit a survey -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Survey</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/addStyles.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="brand">Ella Rises</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Log Out</a>
+        </div>
+    </div>
+
+    <a href="/viewAllSurveys" class="back-btn">← Back to Surveys</a>
+
+    <div class="container">
+        <h1>Edit Survey</h1>
+
+        <% if (error_message) { %>
+            <div class="error-box"><%= error_message %></div>
+        <% } %>
+
+        <form action="/editSurvey/<%= survey.survey_id %>" method="POST">
+            <div class="form-group">
+                <label>Registration (Participant – Event – Date)</label>
+                <select name="reg_id" required>
+                    <% registrations.forEach(reg => { 
+                        let eventDate = "";
+                        if (reg.event_start_date_time) {
+                            eventDate = reg.event_start_date_time.toISOString().split("T")[0];
+                        }
+
+                        const selected = (reg.reg_id === survey.reg_id) ? "selected" : "";
+                    %>
+                        <option value="<%= reg.reg_id %>" <%= selected %>>
+                            <%= (reg.part_first_name || "-") %> <%= (reg.part_last_name || "") %> -
+                            <%= reg.event_name || "-" %> -
+                            <%= eventDate || "-" %>
+                            (<%= reg.part_email || "-" %>)
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Overall Score</label>
+                <input
+                    type="number"
+                    name="survey_overall_score"
+                    value="<%= survey.survey_overall_score %>"
+                    required
+                />
+            </div>
+
+            <div class="form-group">
+                <label>NPS Bucket</label>
+                <input
+                    type="text"
+                    name="nps_bucket"
+                    value="<%= survey.nps_bucket %>"
+                    required
+                />
+            </div>
+
+            <div class="form-group">
+                <label>Comments</label>
+                <textarea name="survey_comments" rows="3"><%= survey.survey_comments || "" %></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Submission Date</label>
+                <input
+                    type="date"
+                    name="survey_submission_date"
+                    value="<%= survey.survey_submission_date ? survey.survey_submission_date.toISOString().split('T')[0] : '' %>"
+                    required
+                />
+            </div>
+
+            <button type="submit" class="submit-btn">Save Changes</button>
+        </form>
+    </div>
+
+</body>
+</html>

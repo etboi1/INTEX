@@ -359,3 +359,134 @@ footer a {
 footer a:hover {
     text-decoration: underline;
 }
+
+/* ----------------------------------------------------
+PROGRAM HERO BANNER (Option C)
+---------------------------------------------------- */
+.program-heroC {
+    background: #99B7C6; /* brand blue */
+    padding: 60px 20px;
+    text-align: center;
+    border-radius: 0; /* removed rounded corners */
+}
+
+.program-heroC h1 {
+    font-family: 'DM Serif Display', serif;
+    color: #FFFFFF;
+    font-size: 2.8rem;
+    margin: 0;
+}
+
+/* ----------------------------------------------------
+PROGRAM STRIPE LAYOUT
+---------------------------------------------------- */
+.program-stripes {
+    display: flex;
+    flex-direction: column;
+    gap: 80px;
+    max-width: 1100px;
+    margin: auto;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.stripe {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    padding: 20px;
+}
+
+.stripe.reverse {
+    flex-direction: row-reverse;
+}
+
+.stripe-img {
+    width: 48%;
+    height: 350px;
+    border-radius: 20px;
+    object-fit: cover;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.12);
+}
+
+.stripe-text {
+    width: 48%;
+}
+
+.stripe-text h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem;
+    margin-bottom: 12px;
+    color: #3A3F3B;
+}
+
+.stripe-text p {
+    font-size: 1.15rem;
+    color: #3A3F3B;
+    margin-bottom: 6px;
+    line-height: 1.55;
+}
+
+/* ----------------------------------------------------
+BUTTONS UNDER EACH PROGRAM
+---------------------------------------------------- */
+.stripe-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 16px;
+}
+
+.btn-donate,
+.btn-enroll {
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* Donate: pink */
+.btn-donate {
+    background: #F9AFB1;
+    color: #3A3F3B;
+    border: 2px solid #F4B092;
+}
+
+.btn-donate:hover {
+    background: #F4B092;
+}
+
+/* Enroll: cream border, dark text */
+.btn-enroll {
+    background: #F9F5EA;
+    color: #3A3F3B;
+    border: 2px solid #9AB59D;
+}
+
+.btn-enroll:hover {
+    background: #FFFFFF;
+}
+
+/* ----------------------------------------------------
+RESPONSIVE BEHAVIOR
+---------------------------------------------------- */
+@media (max-width: 850px) {
+    .stripe,
+    .stripe.reverse {
+        flex-direction: column;
+    }
+
+    .stripe-img,
+    .stripe-text {
+        width: 100%;
+    }
+
+    .stripe-img {
+        height: 260px;
+    }
+
+    .stripe-buttons {
+        justify-content: center;
+    }
+}

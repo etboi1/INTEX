@@ -61,18 +61,24 @@
             <table>
                 <thead>
                     <tr>
+                        <% if (level === "m") { %>
                         <th>Email</th>
+                        <% } %>
                         <th>First</th>
                         <th>Last</th>
+                        <% if (level === "m") { %>
                         <th>Birth</th>
+                        <% } %>
                         <th>Role</th>
+                        <% if (level === "m") { %>
                         <th>Phone</th>
+                        <% } %>
                         <th>City</th>
                         <th>State</th>
+                        <% if (level === "m") { %>
                         <th>Zip</th>
                         <th>School or Employer</th>
                         <!-- Edit and delete are only seen for managers -->
-                        <% if (level === "m") { %>
                         <th>Edit</th>
                         <th>Delete</th>
                         <% } %>
@@ -91,17 +97,25 @@
                         }
                     %>
                         <tr>
+                            <% if (level === "m") { %>
                             <td><%= part.part_email %></td>
+                            <% } %>
                             <td><%= part.part_first_name %></td>
                             <td><%= part.part_last_name %></td>
+                            <% if (level === "m") { %>
                             <td><%= dob %></td>
+                            <% } %>
                             <!-- Make sure it displays full title instead of just "p" or "a" -->
                             <td><% if (part.part_role === "p") { %>Participant<% } else { %>Admin<% } %></td>
+                            <% if (level === "m") { %>
                             <td><%= part.part_phone.toString().replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3") %></td>
+                            <% } %>
                             <td><%= part.part_city %></td>
                             <td><%= part.part_state %></td>
+                            <% if (level === "m") { %>
                             <td><%= part.part_zip %></td>
                             <td><%= part.part_school_or_employer %></td>
+                            <% } %>
 
                             <!-- Edit and delete buttons for managers only -->
                             <% if (level === "m") { %>

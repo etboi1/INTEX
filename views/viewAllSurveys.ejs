@@ -1,0 +1,162 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- Page to view all survey data. Anyone logged in can view. Managers can add/edit/delete. -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>All Surveys</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/viewStyles.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="brand">Ella Rises</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Log Out</a>
+        </div>
+    </div>
+
+    <!-- Top buttons -->
+    <div class="add-btn-container">
+        <!-- Take Survey button (link this to your actual survey URL) -->
+        <a href="https://example.com/survey-link" target="_blank" class="add-btn">Take Survey</a>
+
+        <!-- Manager-only: Add Survey -->
+        <% if (level === "m") { %>
+            <a href="/addSurvey" class="add-btn">Add Survey</a>
+        <% } %>
+    </div>
+
+    <!-- Search bar -->
+    <div style="padding-top: 10px;">
+        <form method="GET" action="/searchAllSurveys" style="text-align:center; margin-bottom:20px;">
+            <input
+                type="text"
+                name="search"
+                placeholder="Search by participant email or event name..."
+                style="padding:10px; width:60%; border:2px solid #FFD8D1; border-radius:10px;"
+            />
+            <button
+                type="submit"
+                style="padding:10px 20px; border-radius:10px; border:2px solid #FFC4BA; background:#FFD8D1; font-weight:600;">
+                Search
+            </button>
+        </form>
+    </div>
+
+    <!-- Error message -->
+    <% if (error_message && error_message !== "") { %>
+        <div class="error-box">
+            <%= error_message %>
+            <br><br>
+            <a href="/viewAllSurveys" class="add-btn">Refresh</a>
+        </div>
+    <% } %>
+
+    <div class="container">
+        <h1>All Surveys</h1>
+
+        <% if (surveys && surveys.length > 0) { %>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Survey ID</th>
+                            <th>Reg ID</th>
+                            <th>Participant</th>
+                            <th>Email</th>
+                            <th>Event</th>
+                            <th>Event Date</th>
+                            <th>Overall Score</th>
+                            <th>NPS Bucket</th>
+                            <th>Comments</th>
+                            <th>Submission Date</th>
+                            <% if (level === "m") { %>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            <% } %>
+                            <th>Responses</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% surveys.forEach(survey => { %>
+                            <% 
+                                // format event date + submission date
+                                let eventDate = "";
+                                if (survey.event_start_date_time) {
+                                    eventDate = survey.event_start_date_time.toISOString().split("T")[0];
+                                }
+
+                                let submissionDate = "";
+                                if (survey.survey_submission_date) {
+                                    submissionDate = survey.survey_submission_date.toISOString().split("T")[0];
+                                }
+
+                                const surveyResponses = responsesBySurvey[survey.survey_id] || [];
+                            %>
+                            <tr>
+                                <td><%= survey.survey_id %></td>
+                                <td><%= survey.reg_id || "-" %></td>
+                                <td>
+                                    <% if (survey.part_first_name || survey.part_last_name) { %>
+                                        <%= survey.part_first_name || "" %> <%= survey.part_last_name || "" %>
+                                    <% } else { %>
+                                        -
+                                    <% } %>
+                                </td>
+                                <td><%= survey.part_email || "-" %></td>
+                                <td><%= survey.event_name || "-" %></td>
+                                <td><%= eventDate || "-" %></td>
+                                <td><%= survey.survey_overall_score %></td>
+                                <td><%= survey.nps_bucket %></td>
+                                <td><%= survey.survey_comments || "-" %></td>
+                                <td><%= submissionDate || "-" %></td>
+
+                                <% if (level === "m") { %>
+                                    <td>
+                                        <form action="/editSurvey/<%= survey.survey_id %>" method="get">
+                                            <input class="action-btn" type="submit" value="Edit" />
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <form action="/deleteSurvey/<%= survey.survey_id %>" method="post" onsubmit="return confirm('Delete this survey?');">
+                                            <input class="action-btn" type="submit" value="Delete" />
+                                        </form>
+                                    </td>
+                                <% } %>
+
+                                <td>
+                                    <details>
+                                        <summary>View Responses</summary>
+                                        <% if (surveyResponses.length > 0) { %>
+                                            <ul>
+                                                <% surveyResponses.forEach(resp => { %>
+                                                    <li>
+                                                        <strong><%= resp.survey_question %></strong><br />
+                                                        <span><%= resp.survey_response %></span>
+                                                    </li>
+                                                <% }) %>
+                                            </ul>
+                                        <% } else { %>
+                                            <em>No question responses recorded.</em>
+                                        <% } %>
+                                    </details>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="empty">No surveys found.</div>
+        <% } %>
+    </div>
+
+</body>
+</html>

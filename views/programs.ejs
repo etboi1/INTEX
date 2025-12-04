@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programs</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/mainStyles.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="/" class="nav-brand">Ella Rises</a>
+            <a href="/viewPart" class="nav-link">Participants</a>
+            <!-- Only managers can view users -->
+            <% if (level === "m") { %>
+            <a href="/viewUsers" class="nav-link">Users</a>
+            <% } %>
+            <a href="/viewEvents" class="nav-link">Events</a>
+            <a href="/viewAllSurveys" class="nav-link">Survey</a>
+            <a href="/viewAllMilestones" class="nav-link">Milestones</a>
+            <a href="/viewAllDonations" class="nav-link">Donations</a>
+            <a href="/programs" class="nav-link">Programs</a>
+            <a href="/donationImpact" class="nav-link">Donate</a>
+        </div>
+
+        <!-- Different button based on login status -->
+        <div class="nav-right">
+            <% if (login) { %>
+            <a href="/logout" class="nav-login">Log Out</a>
+            <% } else { %>
+            <a href="/login" class="nav-login">Login</a>
+            <% } %>
+        </div>
+    </nav>
+
+    <!-- HERO HEADER -->
+    <header class="program-heroC">
+        <h1>Our Programs</h1>
+    </header>
+
+    <div class="hero">
+        <p>
+            Welcome to Ella Rises — a community uplifting Latina youth to pursue higher education,
+            embrace their cultural roots, and grow through arts, STEAM, and mentorship.
+            Our mission is to build confidence, spark dreams, and open doors to opportunity.
+        </p>
+
+            <a href="/publicDonate" class="btn-donate">Donate</a>
+            <a href="/enroll" class="btn-enroll">Enroll</a>
+    </div>
+
+    <div class="program-stripes">
+
+        <!-- BALLET -->
+        <section class="stripe">
+            <img src="/images/logos/ballet_pro.png" class="stripe-img">
+            <div class="stripe-text">
+                <h2>Ballet Folklorico</h2>
+                <p>Girls ages 11 to 18 years old</p>
+                <p>Mondays at 7 pm</p>
+                <p>Auditions for 2026 begin in May</p>
+                <div class="stripe-buttons">
+                </div>
+            </div>
+        </section>
+
+        <!-- MARIACHI -->
+        <section class="stripe reverse">
+            <img src="/images/logos/mariachi_pro.png" class="stripe-img">
+            <div class="stripe-text">
+                <h2>Mariachi</h2>
+                <p>Girls ages 11 to 18</p>
+                <p>Music class for violin, trumpet, guitarron, vihuela, and guitar</p>
+                <p>Mondays from 5:30 pm to 6:45 pm</p>
+                <p>Annual program fee: 45 dollars</p>
+            </div>
+        </section>
+
+        <!-- STEAM -->
+        <section class="stripe">
+            <img src="/images/logos/steam_pro.png" class="stripe-img">
+            <div class="stripe-text">
+                <h2>STEAM</h2>
+                <p>Virtual and in-person STEAM workshops created with partners at Thanksgiving Point, UVU, and BYU.</p>
+            </div>
+        </section>
+
+        <!-- SUMMIT -->
+        <section class="stripe reverse">
+            <img src="/images/logos/summit_pro.png" class="stripe-img">
+            <div class="stripe-text">
+                <h2>Summit and Educational Pathways</h2>
+                <p>Girls ages 11 to 18</p>
+                <p>Day camp that introduces participants to art, STEM, and education experiences</p>
+                <p>Includes a tour of a local university or technical college</p>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        &copy; <%= new Date().getFullYear() %> Ella Rises. 
+        All rights reserved. 
+        <!-- 418 Status Code page -->
+        &nbsp;|&nbsp; <a href="/privacy">Privacy Policy</a>
+    </footer>
+
+</body>
+</html>
