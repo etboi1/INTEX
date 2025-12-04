@@ -98,7 +98,7 @@ app.use(express.urlencoded({extended: true}));
 // ----- WE WILL MODIFY THIS TO PROTECT THE APPROPRIATE ROUTES -----
 app.use((req, res, next) => {
     // Skip authentication for login routes
-    if (req.path === '/' || req.path === '/login' || req.path === '/logout' || req.path === '/signup' || req.path === '/addSignUp') {
+    if (req.path === '/' || req.path === '/login' || req.path === '/logout' || req.path === '/signup' || req.path === '/addSignUp' || req.path === '/donationImpact') {
         //continue with the request path
         return next();
     }
@@ -1398,15 +1398,13 @@ app.post("/addDonationGlobal", (req, res) => {
     const { part_id, donation_date, donation_amount } = req.body;
 
     if (!part_id || !donation_date || !donation_amount) {
-        return knex("participant_info")
-            .select()
-            .then(parts => {
-                res.status(400).render("addDonationGlobal", {
-                    level: req.session.level,
-                    parts,
-                    error_message: "All fields are required."
-                });
+        return knex("participant_info").select().then(parts => {
+            res.status(400).render("addDonationGlobal", {
+                level: req.session.level,
+                parts,
+                error_message: "All fields are required."
             });
+        });
     }
 
     knex("participant_donations")
@@ -1416,20 +1414,31 @@ app.post("/addDonationGlobal", (req, res) => {
         .then(result => {
             const nextNum = (result.maxNum || 0) + 1;
 
-            return knex("participant_donations")
-                .insert({
-                    part_id,
-                    donation_number: nextNum,
-                    donation_date,
-                    donation_amount
-                })
-                .then(() => res.redirect("/viewAllDonations"));
+            return knex("participant_donations").insert({
+                part_id,
+                donation_number: nextNum,
+                donation_date,
+                donation_amount
+            });
         })
+        .then(() => {
+            return knex("participant_info")
+                .where({ part_id })
+                .update({
+                    total_donations: knex.raw(`
+                        (SELECT COALESCE(SUM(donation_amount), 0)
+                            FROM participant_donations
+                            WHERE part_id = ?)
+                    `, [part_id])
+                });
+        })
+        .then(() => res.redirect("/viewAllDonations"))
         .catch(err => {
             console.error("Error adding donation:", err.message);
             res.redirect("/viewAllDonations");
         });
 });
+
 
 app.get("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
     if (req.session.level !== "m") {
@@ -1460,14 +1469,21 @@ app.get("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
 app.post("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
     const partId = req.params.part_id;
     const donationNumber = req.params.donation_number;
-
     const { donation_date, donation_amount } = req.body;
 
     knex("participant_donations")
         .where({ part_id: partId, donation_number: donationNumber })
-        .update({
-            donation_date,
-            donation_amount
+        .update({ donation_date, donation_amount })
+        .then(() => {
+            return knex("participant_info")
+                .where({ part_id: partId })
+                .update({
+                    total_donations: knex.raw(`
+                        (SELECT COALESCE(SUM(donation_amount), 0)
+                            FROM participant_donations
+                            WHERE part_id = ?)
+                    `, [partId])
+                });
         })
         .then(() => res.redirect("/viewAllDonations"))
         .catch(err => {
@@ -1476,44 +1492,32 @@ app.post("/editDonationGlobal/:part_id/:donation_number", (req, res) => {
         });
 });
 
+
 app.post("/deleteDonationGlobal/:part_id/:donation_number", (req, res) => {
     const partId = req.params.part_id;
     const donationNumber = req.params.donation_number;
 
-    // 1. Get the donation amount first
     knex("participant_donations")
         .where({ part_id: partId, donation_number: donationNumber })
-        .first()
-        .then(donation => {
-            if (!donation) {
-                console.error("Donation not found");
-                return res.redirect("/viewAllDonations");
-            }
-
-            const amountToSubtract = donation.donation_amount || 0;
-
-            // 2. Delete the donation
-            return knex("participant_donations")
-                .where({ part_id: partId, donation_number: donationNumber })
-                .del()
-                .then(() => amountToSubtract);
-        })
-        .then(amountToSubtract => {
-            if (amountToSubtract === undefined) return; // error or nothing found
-
-            // 3. Subtract from participant_info.total_donations
+        .del()
+        .then(() => {
             return knex("participant_info")
                 .where({ part_id: partId })
-                .decrement("total_donations", amountToSubtract);
+                .update({
+                    total_donations: knex.raw(`
+                        (SELECT COALESCE(SUM(donation_amount), 0)
+                            FROM participant_donations
+                            WHERE part_id = ?)
+                    `, [partId])
+                });
         })
-        .then(() => {
-            res.redirect("/viewAllDonations");
-        })
+        .then(() => res.redirect("/viewAllDonations"))
         .catch(err => {
             console.error("Error deleting donation:", err.message);
             res.redirect("/viewAllDonations");
         });
 });
+
 
 app.get("/searchAllDonations", (req, res) => {
     const search = req.query.search;
@@ -1555,6 +1559,9 @@ app.get("/searchAllDonations", (req, res) => {
         });
 });
 
+app.get("/donationImpact", (req, res) => {
+    res.render("donationImpact", { level: req.session.level, login: req.session.isLoggedIn } );
+});
 
 /* ---------------------------------------------------------
 ---------- SET UP SERVER TO LISTEN ON DESIRED PORT ---------
