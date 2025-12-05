@@ -3,7 +3,7 @@ GLOBAL
 ---------------------------------------------------- */
 body {
     font-family: 'Montserrat', sans-serif;
-    background: #F9F5EA; /* brand cream */
+    background: #F9F5EA;
     margin: 0;
     padding: 0;
 }
@@ -15,13 +15,13 @@ NAVBAR
     width: 100%;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 18px 40px;
     background: #F9F5EA;
     border-bottom: 2px solid #FFD8D1;
     position: sticky;
     top: 0;
     z-index: 10;
-    align-items: center;
     box-sizing: border-box;
 }
 
@@ -29,14 +29,16 @@ NAVBAR
     display: flex;
     align-items: center;
     gap: 24px;
-    flex-shrink: 0;
+    flex-wrap: nowrap;          /* keep one line on desktop */
 }
 
 .nav-right {
-    flex-shrink: 0;
+    display: flex;
+    align-items: center;
 }
 
 .navbar a {
+    text-decoration: none;
     white-space: nowrap;
 }
 
@@ -44,13 +46,11 @@ NAVBAR
     font-family: 'DM Serif Display', serif;
     font-size: 1.8rem;
     color: #3A3F3B;
-    text-decoration: none;
 }
 
 .nav-link {
     color: #3A3F3B;
     font-weight: 500;
-    text-decoration: none;
 }
 
 .nav-link:hover {
@@ -64,12 +64,64 @@ NAVBAR
     border-radius: 8px;
     color: #3A3F3B;
     font-weight: 600;
-    text-decoration: none;
 }
 
 .nav-login:hover {
     background: #F4B092;
 }
+
+/* ----------------------------------------------------
+NAVBAR – MOBILE / SMALL SCREENS
+---------------------------------------------------- */
+@media (max-width: 950px) {
+    .navbar {
+        flex-direction: column;
+        align-items: center;
+        padding: 14px 16px;
+        gap: 10px;
+    }
+
+    /* Brand gets its own line */
+    .nav-left {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px 16px;
+    }
+
+    .nav-brand {
+        flex-basis: 100%;
+        text-align: center;
+        font-size: 1.6rem;
+        margin-bottom: 4px;
+    }
+
+    /* Links wrap nicely under the brand */
+    .nav-link {
+        font-size: 0.9rem;
+    }
+
+    /* Login button on its own row, centered */
+    .nav-right {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .nav-login {
+        padding: 8px 20px;
+        font-size: 0.95rem;
+    }
+}
+
+/* super tiny screens: shrink gap & font a bit more */
+@media (max-width: 600px) {
+    .nav-left {
+        gap: 8px 12px;
+    }
+    .nav-link {
+        font-size: 0.85rem;
+    }
+}
+
 
 /* ----------------------------------------------------
 PAGE HEADER
@@ -90,6 +142,17 @@ header {
     font-size: 1.25rem;
     color: #CE325B;
     margin-bottom: 24px;
+}
+
+/* -------- Header – Mobile -------- */
+@media (max-width: 700px) {
+    .site-title {
+        font-size: 2.2rem;
+    }
+
+    .tagline {
+        font-size: 1.05rem;
+    }
 }
 
 /* ----------------------------------------------------
@@ -119,7 +182,6 @@ HERO
     font-size: 1.05rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
     text-decoration: none;
     display: inline-block;
 }
@@ -128,15 +190,25 @@ HERO
     background: #F4B092;
 }
 
+/* -------- Hero – Mobile -------- */
+@media (max-width: 700px) {
+    .hero p {
+        font-size: 1rem;
+        padding: 0 10px;
+    }
+
+    .btn-main {
+        width: 90%;
+        padding: 14px;
+        font-size: 1rem;
+    }
+}
+
 /* ----------------------------------------------------
 GENERAL SECTIONS
 ---------------------------------------------------- */
 .section {
     padding: 60px 20px;
-}
-
-.section:nth-child(even) {
-    background: #FFF;
 }
 
 .section h2 {
@@ -147,41 +219,54 @@ GENERAL SECTIONS
     text-align: center;
 }
 
+@media (max-width: 700px) {
+    .section {
+        padding: 40px 16px;
+    }
+
+    .section h2 {
+        font-size: 1.6rem;
+    }
+}
+
 /* ----------------------------------------------------
-PROGRAM CARDS
+PROGRAM CARDS — NEW, CLEAN, PROFESSIONAL
 ---------------------------------------------------- */
 .programs {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 32px;
-    margin-top: 32px;
-    margin-bottom: 40px;
+    margin-top: 40px;
+    padding: 0 20px;
 }
 
 .prog-card {
     background: #FFFFFF;
-    border: 2px solid #9AB59D;
-    border-radius: 16px;
-    width: 260px;
-    height: 430px;
+    border: 1.5px solid #AFC8B5; /* softer pastel green */
+    border-radius: 18px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     text-align: center;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.prog-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.12);
+}
+
+/* IMAGE */
 .prog-img {
     width: 100%;
-    height: 150px;
+    height: 180px;
     object-fit: cover;
-    object-position: center;
-    border-bottom: 2px solid #F9F5EA;
 }
 
+/* CONTENT */
 .prog-content {
-    padding: 16px 14px;
+    padding: 18px 20px 8px 20px;
     flex-grow: 1;
 }
 
@@ -189,44 +274,47 @@ PROGRAM CARDS
     font-family: 'DM Serif Display', serif;
     color: #3A3F3B;
     font-size: 1.25rem;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .prog-card p {
     color: #3A3F3B;
-    font-size: 0.92rem;
+    font-size: 0.95rem;
     line-height: 1.45;
-    margin: 0;
+    margin: 0 auto 20px auto;
+    max-width: 240px;
 }
 
-.prog-card .btn-small {
+/* BUTTON */
+.btn-small {
     background: #F9AFB1;
     color: #3A3F3B;
     border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
+    padding: 10px 24px;
+    border-radius: 12px;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
     margin: 18px auto 22px auto;
     display: inline-block;
+    transition: background 0.2s ease, transform 0.15s ease;
 }
 
-.prog-card .btn-small:hover {
+.btn-small:hover {
     background: #F4B092;
+    transform: translateY(-2px);
 }
+
+
 
 /* ----------------------------------------------------
-DONATION PROMO (from home page)
+DONATION PROMO
 ---------------------------------------------------- */
 .donate-bg {
     background: url('/images/logos/donate.png') center/cover no-repeat;
     background-color: #FFD8D1;
     padding: 90px 20px;
-    margin-top: 0px;
-    border-radius: 0;
-    position: relative;
 }
 
 .donate-card {
@@ -240,104 +328,92 @@ DONATION PROMO (from home page)
     border: 2px solid #F9F5EA;
 }
 
-.donate-card h2 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2.2rem;
-    margin-bottom: 16px;
-    color: #3A3F3B;
-}
-
-.donate-card p {
-    font-size: 1.15rem;
-    line-height: 1.65;
-    color: #3A3F3B;
-    max-width: 620px;
-    margin: 0 auto 32px auto;
-}
-
 .donate-buttons {
     display: flex;
     justify-content: center;
     gap: 22px;
+    flex-wrap: wrap;
 }
 
-.btn-donateD {
-    background: #F9AFB1;
-    color: #3A3F3B;
-    padding: 12px 28px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1.05rem;
-    transition: 0.2s;
-}
-
-.btn-donateD:hover {
-    background: #F4B092;
-}
-
+.btn-donateD,
 .btn-impactD {
-    background: #F9F5EA;
-    color: #3A3F3B;
     padding: 12px 28px;
     border-radius: 10px;
-    text-decoration: none;
     font-weight: 600;
     font-size: 1.05rem;
-    transition: 0.2s;
+    text-decoration: none;
+    display: inline-block;
 }
 
-.btn-impactD:hover {
-    background: #FFFFFF;
+/* -------- Donate – Mobile -------- */
+@media (max-width: 700px) {
+    .donate-card {
+        padding: 30px 20px;
+    }
+
+    .btn-donateD,
+    .btn-impactD {
+        width: 100%;
+        max-width: 300px;
+        padding: 14px;
+        font-size: 1rem;
+    }
 }
 
 /* ----------------------------------------------------
-IMPACT CARD (new page)
+PROGRAM STRIPES
 ---------------------------------------------------- */
-.impact-bg {
-    background: #FFD8D1;
-    padding: 40px 20px;
-}
-
-.impact-card {
-    background: #FFFFFF;
-    padding: 50px 40px;
-    max-width: 800px;
+.program-stripes {
+    display: flex;
+    flex-direction: column;
+    gap: 80px;
+    max-width: 1100px;
     margin: auto;
+    padding: 0 20px;
+}
+
+.stripe {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+}
+
+.stripe.reverse {
+    flex-direction: row-reverse;
+}
+
+.stripe-img {
+    width: 48%;
+    height: 350px;
     border-radius: 20px;
-    text-align: center;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
-    border: 2px solid #F9F5EA;
+    object-fit: cover;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.12);
 }
 
-.impact-card h2 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2.2rem;
-    color: #3A3F3B;
-    margin-bottom: 20px;
+.stripe-text {
+    width: 48%;
 }
 
-.impact-card p {
-    font-size: 1.15rem;
-    line-height: 1.65;
-    color: #3A3F3B;
-    max-width: 650px;
-    margin: 0 auto 30px auto;
-}
+/* -------- Stripe – Mobile -------- */
+@media (max-width: 850px) {
+    .stripe,
+    .stripe.reverse {
+        flex-direction: column;
+        text-align: center;
+    }
 
-.impact-list {
-    list-style: none;
-    padding: 0;
-    max-width: 650px;
-    margin: 20px auto 40px auto;
-    text-align: left;
-}
+    .stripe-img,
+    .stripe-text {
+        width: 100%;
+    }
 
-.impact-list li {
-    margin-bottom: 16px;
-    font-size: 1.1rem;
-    color: #3A3F3B;
-    padding-left: 10px;
+    .stripe-img {
+        height: 240px;
+    }
+
+    .stripe-buttons {
+        justify-content: center;
+    }
 }
 
 /* ----------------------------------------------------
@@ -361,79 +437,86 @@ footer a:hover {
 }
 
 /* ----------------------------------------------------
-PROGRAM HERO BANNER (Option C)
+BUTTONS — RESTORED + REFINED
 ---------------------------------------------------- */
-.program-heroC {
-    background: #99B7C6; /* brand blue */
-    padding: 60px 20px;
-    text-align: center;
-    border-radius: 0; /* removed rounded corners */
-}
 
-.program-heroC h1 {
-    font-family: 'DM Serif Display', serif;
-    color: #FFFFFF;
-    font-size: 2.8rem;
-    margin: 0;
-}
-
-/* ----------------------------------------------------
-PROGRAM STRIPE LAYOUT
----------------------------------------------------- */
-.program-stripes {
-    display: flex;
-    flex-direction: column;
-    gap: 80px;
-    max-width: 1100px;
-    margin: auto;
-    margin-top: 30px;
-    margin-bottom: 20px;
-}
-
-.stripe {
-    display: flex;
-    align-items: center;
-    gap: 50px;
-    padding: 20px;
-}
-
-.stripe.reverse {
-    flex-direction: row-reverse;
-}
-
-.stripe-img {
-    width: 48%;
-    height: 350px;
-    border-radius: 20px;
-    object-fit: cover;
-    box-shadow: 0 12px 25px rgba(0,0,0,0.12);
-}
-
-.stripe-text {
-    width: 48%;
-}
-
-.stripe-text h2 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.9rem;
-    margin-bottom: 12px;
+/* Main pink hero buttons */
+.btn-main {
+    background: #F9AFB1;
     color: #3A3F3B;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, transform 0.15s ease;
 }
 
-.stripe-text p {
-    font-size: 1.15rem;
+.btn-main:hover {
+    background: #F4B092;
+    transform: translateY(-2px);
+}
+
+/* Small “Learn More” buttons */
+.btn-small {
+    background: #F9AFB1;
     color: #3A3F3B;
-    margin-bottom: 6px;
-    line-height: 1.55;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s ease;
 }
 
-/* ----------------------------------------------------
-BUTTONS UNDER EACH PROGRAM
----------------------------------------------------- */
+.btn-small:hover {
+    background: #F4B092;
+    transform: translateY(-2px);
+}
+
+/* Donation buttons */
+.btn-donateD {
+    background: #F9AFB1;
+    color: #3A3F3B;
+    padding: 12px 28px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05rem;
+    transition: background 0.2s, transform 0.15s ease;
+}
+
+.btn-donateD:hover {
+    background: #F4B092;
+    transform: translateY(-2px);
+}
+
+.btn-impactD {
+    background: #F9F5EA;
+    color: #3A3F3B;
+    padding: 12px 28px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05rem;
+    border: 2px solid #9AB59D;
+    transition: background 0.2s, transform 0.15s ease;
+}
+
+.btn-impactD:hover {
+    background: #FFFFFF;
+    transform: translateY(-2px);
+}
+
+/* Program stripe buttons */
 .stripe-buttons {
     margin-top: 20px;
     display: flex;
     gap: 16px;
+    flex-wrap: wrap;
 }
 
 .btn-donate,
@@ -444,9 +527,9 @@ BUTTONS UNDER EACH PROGRAM
     font-weight: 600;
     text-decoration: none;
     display: inline-block;
+    transition: background 0.2s, transform 0.15s ease;
 }
 
-/* Donate: pink */
 .btn-donate {
     background: #F9AFB1;
     color: #3A3F3B;
@@ -455,9 +538,9 @@ BUTTONS UNDER EACH PROGRAM
 
 .btn-donate:hover {
     background: #F4B092;
+    transform: translateY(-2px);
 }
 
-/* Enroll: cream border, dark text */
 .btn-enroll {
     background: #F9F5EA;
     color: #3A3F3B;
@@ -466,27 +549,21 @@ BUTTONS UNDER EACH PROGRAM
 
 .btn-enroll:hover {
     background: #FFFFFF;
+    transform: translateY(-2px);
 }
 
-/* ----------------------------------------------------
-RESPONSIVE BEHAVIOR
----------------------------------------------------- */
-@media (max-width: 850px) {
-    .stripe,
-    .stripe.reverse {
-        flex-direction: column;
-    }
-
-    .stripe-img,
-    .stripe-text {
+/* Mobile: buttons become full width */
+@media (max-width: 700px) {
+    .btn-main,
+    .btn-donateD,
+    .btn-impactD,
+    .btn-donate,
+    .btn-enroll {
         width: 100%;
-    }
-
-    .stripe-img {
-        height: 260px;
-    }
-
-    .stripe-buttons {
-        justify-content: center;
+        max-width: 300px;
+        padding: 14px;
+        font-size: 1rem;
+        margin: 6px auto;
+        display: block;
     }
 }
