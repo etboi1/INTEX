@@ -1031,7 +1031,7 @@ app.get("/viewEvents", (req, res) => {
             "lc.location_name",
             "lc.location_capacity"
         )
-        .orderBy("eo.event_start_date_time")
+        .orderBy("eo.event_start_date_time", "desc")
         // show page to list all events
         .then(events => {
             res.render("viewEvents", {
