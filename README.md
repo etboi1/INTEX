@@ -17,3 +17,6 @@
     - At least in most ways, the website has a responsive layout that resizes appropriately for different screen sizes
     - This can be seen with the navbar and views not overflowing
     - Tables will require scrolling sideways to view, but within their respective div
+
+## Other Notes
+- If you open our code in VSCode, it may give you an IDE warning on donationImpact.ejs. This is a VSCode issue; the code runs fine
