@@ -104,11 +104,28 @@ app.use((req, res, next) => {
     
     // Check if user is logged in for all other routes
     // certain parts of this let users access any users milestones without the manager permissions to manipulate using includes and startsWith
-    if (req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent' || req.path === '/viewAllSurveys' || req.path === '/searchAllSurveys' || (req.path.startsWith("/milestones/") && !req.path.includes("/edit") && !req.path.includes("/delete") && !req.path.includes("/add")))) {
+    if (req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent' || req.path === '/viewAllSurveys' || req.path === '/searchAllSurveys'  || req.path ==="/createParticipant" || (req.path.startsWith("/milestones/") && !req.path.includes("/edit") && !req.path.includes("/delete") && !req.path.includes("/add")))) {
         return next(); // User is logged in, continue
     } // If they are not logged in
-    else if (!req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent' || req.path === '/viewAllSurveys' || req.path === '/searchAllSurveys' || (req.path.startsWith("/milestones/") && !req.path.includes("/edit") && !req.path.includes("/delete") && !req.path.includes("/add")))) {
+    else if (!req.session.isLoggedIn && (req.path === '/viewPart' || req.path === '/viewAllDonations' || req.path === '/viewAllMilestones' || req.path === '/viewEvents' || req.path === '/displayMilestones' || req.path === '/searchAllDonations' || req.path === '/searchAllMilestones' || req.path === '/searchPart' || req.path === '/searchEvent' || req.path === '/viewAllSurveys' || req.path === '/searchAllSurveys' || req.path ==="/createParticipant" || (req.path.startsWith("/milestones/") && !req.path.includes("/edit") && !req.path.includes("/delete") && !req.path.includes("/add")))) {
         return res.render("login", { error_message: "Please log in to access this page" });
+    }
+
+    if (req.session.isLoggedIn && (req.path === '/register' || req.path === '/takeSurvey')) {
+        if (req.session.partId) {
+            return next()
+        }
+    return knex.select("part_id").from("participant_info").where('part_email', req.session.email).first().then(part => {
+        if (!part) {
+            return res.redirect("/createParticipant");
+        } else {
+            const link = { part_id: part.part_id };
+            return knex.select().from('users').where("user_id", req.session.userId).update(link).then(() => {
+                req.session.partId = part.part_id;
+                return next();
+            })
+        }
+    })
     }
 
     if (req.session.isLoggedIn && req.session.level === 'm') {
@@ -317,7 +334,7 @@ app.post("/login", (req, res) => {
     let password = req.body.password;
 
     // grab user where login matches
-    knex.select("email", "password", "level")
+    knex.select()
         .from('users')
         .where("email", email)
         .andWhere("password", password)
@@ -327,6 +344,8 @@ app.post("/login", (req, res) => {
                 req.session.isLoggedIn = true;
                 req.session.email = email;
                 req.session.level = users[0].level;
+                req.session.partId = users[0].part_id;
+                req.session.userId = users[0].user_id;
                 res.redirect("/");
             } else {
                 // No matching user found
@@ -1846,17 +1865,6 @@ app.get("/privacy", (req, res) => {
 })
 
 
-
-
-
-
-
-
-
-
-
-
-
 // View all surveys
 app.get("/viewAllSurveys", (req, res) => {
     // main survey list with joined participant + event data
@@ -2257,6 +2265,347 @@ app.post("/deleteSurvey/:survey_id", (req, res) => {
         });
 });
 
+
+
+
+
+// GET: Create participant record (for users without a linked participant)
+app.get("/createParticipant", (req, res) => {
+    res.render("createParticipant", {
+        level: req.session.level,
+        error_message: ""
+    });
+});
+
+// POST: Create participant_info record and link it to the user
+app.post("/createParticipant", (req, res) => {
+
+    // Pull fields from form
+    const {
+        part_first_name,
+        part_last_name,
+        part_phone,
+        part_city,
+        part_state,
+        part_zip,
+        part_school_or_employer,
+        part_dob
+    } = req.body;
+
+    // Basic validation
+    if (!part_first_name || !part_last_name || !part_phone ||
+        !part_city || !part_state || !part_zip ||
+        !part_school_or_employer || !part_dob) {
+
+        // Re-render the form with an error
+        return res.status(400).render("createParticipant", {
+            level: req.session.level,
+            error_message: "All fields are required."
+        });
+    }
+
+    let part_role = "p"
+    if (req.session.level === "m") {part_role = "a"} 
+
+    // Build participant object
+    const newPart = {
+        part_email: req.session.email,       // Email comes from logged-in user
+        part_first_name,
+        part_last_name,
+        part_phone,
+        part_city,
+        part_state,
+        part_zip,
+        part_school_or_employer,
+        part_role,                // All user-created participants should be "p"
+        part_dob
+    };
+
+    // Insert participant, return new part_id
+    knex("participant_info")
+        .insert(newPart)
+        .returning("part_id")
+        .then(([row]) => {
+
+            // row.part_id contains the new participant's id
+            const newPartId = row.part_id;
+
+            // Link the participant to the user's record
+            return knex("users")
+                .where("user_id", req.session.userId)
+                .update({ part_id: newPartId })
+
+                // After linking, update session and redirect
+                .then(() => {
+                    req.session.partId = newPartId;
+                    res.redirect("/");   // You can send them anywhere you want
+                });
+        })
+        .catch(err => {
+            console.error("Error creating participant:", err.message);
+
+            return res.status(500).render("createParticipant", {
+                level: req.session.level,
+                error_message: "Unable to create participant."
+            });
+        });
+});
+
+app.get("/register", (req, res) => {
+    knex("event_occurrences as eo")
+        .join("event_templates as et", "eo.event_id", "et.event_id")
+        .where("eo.event_start_date_time", ">=", knex.fn.now())
+        .select(
+            "eo.event_occurrence_id",
+            "et.event_name",
+            "eo.event_start_date_time"
+        )
+        .orderBy("eo.event_start_date_time")
+        .then(events => {
+            res.render("register", { 
+                events,
+                level: req.session.level,
+                partId: req.session.partId,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading events for registration:", err.message);
+
+            res.render("register", {
+                events: [],
+                level: req.session.level,
+                partId: req.session.partId,
+                error_message: "Unable to load events at this time."
+            });
+        });
+});
+
+
+
+app.post("/register", (req, res) => {
+    const partId = req.session.partId;   // <-- FIXED
+    const eventOccurrenceId = req.body.event_occurrence_id;
+
+    // Basic validation
+    if (!partId || !eventOccurrenceId) {
+        return res.status(400).render("register", {
+            events: [],
+            level: req.session.level,
+            partId,
+            error_message: "Missing participant or event information."
+        });
+    }
+
+    // Check if already registered
+    knex("registrations")
+        .where({ part_id: partId, event_occurrence_id: eventOccurrenceId })
+        .first()
+        .then(existing => {
+            if (existing) {
+                return res.render("register", {
+                    events: [],
+                    level: req.session.level,
+                    partId,
+                    error_message: "You are already registered for this event."
+                });
+            }
+
+            // Insert new registration
+            return knex("registrations")
+                .insert({
+                    part_id: partId,
+                    event_occurrence_id: eventOccurrenceId,
+                    reg_status: "r",
+                    reg_created_at: knex.fn.now()
+                })
+                .then(() => res.redirect("/viewEvents"));
+        })
+        .catch(err => {
+            console.error("Error registering for event:", err.message);
+
+            res.status(500).render("register", {
+                events: [],
+                level: req.session.level,
+                partId,
+                error_message: "Unable to register for the event right now."
+            });
+        });
+});
+
+
+
+
+
+
+
+app.get("/viewRegistrations", (req, res) => {
+
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    knex("registrations as r")
+        .join("participant_info as p", "r.part_id", "p.part_id")
+        .join("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
+        .join("event_templates as et", "eo.event_id", "et.event_id")
+        .select(
+            "r.reg_id",
+            "r.reg_status",
+            "r.reg_created_at",
+            "p.part_first_name",
+            "p.part_last_name",
+            "p.part_email",
+            "et.event_name"
+        )
+        .orderBy("r.reg_created_at", "desc")
+        .then(registrations => {
+            res.render("viewRegistrations", {
+                registrations,
+                error_message: "",
+                level: req.session.level
+            });
+        })
+        .catch(err => {
+            console.error("Error loading registrations:", err);
+            res.render("viewRegistrations", {
+                registrations: [],
+                error_message: "Unable to load registrations.",
+                level: req.session.level
+            });
+        });
+
+});
+
+app.get("/addRegistration", (req, res) => {
+
+    knex("participant_info")
+        .select("part_id", "part_first_name", "part_last_name", "part_email")
+        .orderBy("part_last_name")   // <-- ORDER PARTICIPANTS
+        .then(participants => {
+            knex("event_occurrences as eo")
+                .join("event_templates as et", "eo.event_id", "et.event_id")
+                .select(
+                    "eo.event_occurrence_id",
+                    "et.event_name",
+                    "eo.event_start_date_time"
+                )
+                .orderBy("eo.event_start_date_time")   // <-- ORDER EVENTS
+                .then(events => {
+                    res.render("addRegistration", {
+                        participants,
+                        events,
+                        error_message: "",
+                        level: req.session.level
+                    });
+                });
+        })
+        .catch(err => {
+            console.error("Error loading addRegistration:", err);
+            res.render("addRegistration", {
+                participants: [],
+                events: [],
+                error_message: "Unable to load information.",
+                level: req.session.level
+            });
+        });
+});
+
+
+app.post("/addRegistration", (req, res) => {
+
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+
+    const { part_id, event_occurrence_id, reg_status } = req.body;
+
+    knex("registrations")
+        .insert({
+            part_id,
+            event_occurrence_id,
+            reg_status,
+            reg_created_at: knex.fn.now()
+        })
+        .then(() => {
+            res.redirect("/viewRegistrations");
+        })
+        .catch(err => {
+            console.error("Error adding registration:", err);
+            res.redirect("/addRegistration");
+        });
+});
+
+app.get("/editRegistration/:regId", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+    const regId = req.params.regId;
+    knex("registrations")
+        .select("reg_id", "part_id", "event_occurrence_id", "reg_status", "reg_created_at")
+        .where({ reg_id: regId })
+        .first()
+        .then(registration => {
+            return knex("participant_info")
+                .select("part_id", "part_first_name", "part_last_name", "part_email")
+                .orderBy("part_last_name")
+                .then(participants => {
+                    return knex("event_occurrences as eo")
+                        .join("event_templates as et", "eo.event_id", "et.event_id")
+                        .select(
+                            "eo.event_occurrence_id",
+                            "et.event_name",
+                            "eo.event_start_date_time"
+                        )
+                        .orderBy("eo.event_start_date_time")
+                        .then(events => {
+                            res.render("editRegistration", {
+                                registration,
+                                participants,
+                                events,
+                                error_message: "",
+                                level: req.session.level
+                            });
+                        });
+                });
+        })
+        .catch(err => {
+            console.error("Error loading editRegistration:", err);
+            res.redirect("/viewRegistrations");
+        });
+});
+
+app.post("/editRegistration/:regId", (req, res) => {
+    if (req.session.level !== "m") {
+        return res.redirect("/");
+    }
+    const regId = req.params.regId;
+    const { part_id, event_occurrence_id, reg_status, reg_created_at } = req.body;
+    knex("registrations")
+        .where({ reg_id: regId })
+        .update({
+            part_id,
+            event_occurrence_id,
+            reg_status,
+            reg_created_at
+        })
+        .then(() => {
+            res.redirect("/viewRegistrations");
+        })
+        .catch(err => {
+            console.error("Error updating registration:", err);
+            res.redirect(`/editRegistration/${regId}`);
+        });
+});
+
+
+app.get("/manager", (req, res) => {
+    if (req.session.level === "m") {
+        res.render("manager", {level: req.session.level, login: req.session.isLoggedIn})
+    } else {
+        res.redirect("/")
+    }
+})
 
 /* ---------------------------------------------------------
 ---------- SET UP SERVER TO LISTEN ON DESIRED PORT ---------

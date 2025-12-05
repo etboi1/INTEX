@@ -1,0 +1,80 @@
+<!-- Add Registration -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Registration</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/addStyles.css">
+</head>
+
+<body>
+
+    <div class="navbar">
+        <div class="brand">Ella Rises</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Log Out</a>
+        </div>
+    </div>
+
+    <a href="/viewRegistrations" class="back-btn">← Back to Registrations</a>
+
+    <div class="container">
+        <h1>Add Registration</h1>
+
+        <% if (error_message) { %>
+            <div class="error-box"><%= error_message %></div>
+        <% } %>
+
+        <form action="/addRegistration" method="POST">
+
+            <!-- Participant -->
+            <div class="form-group">
+                <label>Select Participant</label>
+                <select name="part_id" required>
+                    <option value="">-- Choose Participant --</option>
+                    <% participants.forEach(p => { %>
+                        <option value="<%= p.part_id %>">
+                            <%= p.part_first_name %> <%= p.part_last_name %> — <%= p.part_email %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <!-- Event -->
+            <div class="form-group">
+                <label>Select Event</label>
+                <select name="event_occurrence_id" required>
+                    <option value="">-- Choose Event --</option>
+                    <% events.forEach(e => { %>
+                        <option value="<%= e.event_occurrence_id %>">
+                            <%= e.event_name %> —
+                            <%= new Date(e.event_start_date_time).toLocaleDateString() %>
+                            @
+                            <%= new Date(e.event_start_date_time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <!-- Status -->
+            <div class="form-group">
+                <label>Registration Status</label>
+                <select name="reg_status" required>
+                    <option value="r">Registered</option>
+                    <option value="a">Attended</option>
+                    <option value="n">No-Show</option>
+                    <option value="c">Cancelled</option>
+                </select>
+            </div>
+
+            <button class="submit-btn">Add Registration</button>
+        </form>
+
+    </div>
+
+</body>
+</html>

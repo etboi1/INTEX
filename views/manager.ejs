@@ -1,0 +1,120 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- Manager Insights Dashboard -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manager Insights</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/mainStyles.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="/" class="nav-brand">Ella Rises</a>
+            <a href="/viewPart" class="nav-link">Participants</a>
+            <!-- Only managers can view users -->
+            <% if (level === "m") { %>
+            <a href="/viewUsers" class="nav-link">Users</a>
+            <a href="/viewRegistrations" class="nav-link">Registrations</a>
+            <% } %>
+            <a href="/viewEvents" class="nav-link">Events</a>
+            <a href="/viewAllSurveys" class="nav-link">Survey</a>
+            <a href="/viewAllMilestones" class="nav-link">Milestones</a>
+            <a href="/viewAllDonations" class="nav-link">Donations</a>
+            <a href="/programs" class="nav-link">Programs</a>
+            <a href="/donationImpact" class="nav-link">Donate</a>
+            <% if (level === "m") { %>
+            <a href="/manager" class="nav-link">Manager Insights</a>
+            <% } %>
+        </div>
+
+        <!-- Different button based on login status -->
+        <div class="nav-right">
+            <% if (login) { %>
+            <a href="/logout" class="nav-login">Log Out</a>
+            <% } else { %>
+            <a href="/login" class="nav-login">Login</a>
+            <% } %>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+        <h1 class="site-title" style="font-size:2.6rem;">Manager Insights Dashboard</h1>
+        <p>
+            Explore key indicators that highlight STEAM-field graduation rates, job outcomes, 
+            and participant satisfaction. This dashboard helps managers track program impact 
+            and make informed decisions that strengthen the Ella Rises mission.
+        </p>
+    </div>
+
+    <!-- MAIN SECTION -->
+    <section class="section" style="text-align:center;">
+        <h2>Interactive Insights Dashboard</h2>
+
+        <p style="max-width:700px; margin:0 auto 30px auto; font-size:1.1rem; color:#3A3F3B;">
+            Use the dashboard below to view event performance, attendance trends, and feedback data. 
+            Filters allow you to analyze changes over time and compare participant experiences.
+        </p>
+
+        <!-- Tableau Embed Wrapper (fully centered) -->
+        <div style="
+            max-width:1100px;
+            margin:auto;
+            display:flex;
+            justify-content:center;
+        ">
+            <div id="tableauEmbedHere" style="width:100%; padding-left: 5%;" >
+
+                <!-- Tableau Embed -->
+                <div class='tableauPlaceholder' id='viz1764898217568' style='position:relative; margin:auto;'>
+                    <noscript>
+                        <a href='#'>
+                            <img alt='Dashboard'
+                                src='https://public.tableau.com/static/images/IN/INTEX_Dashboards/Dashboard1/1_rss.png'
+                                style='border:none;' />
+                        </a>
+                    </noscript>
+
+                    <object class='tableauViz' style='display:none; width:100%; height:900px;'>
+                        <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+                        <param name='embed_code_version' value='3' />
+                        <param name='site_root' value='' />
+                        <param name='name' value='INTEX_Dashboards/Dashboard1' />
+                        <param name='tabs' value='no' />
+                        <param name='toolbar' value='yes' />
+                        <param name='animate_transition' value='yes' />
+                        <param name='display_static_image' value='yes' />
+                        <param name='display_spinner' value='yes' />
+                        <param name='display_overlay' value='yes' />
+                        <param name='display_count' value='yes' />
+                    </object>
+                </div>
+
+                <script type='text/javascript'>
+                    var divElement = document.getElementById('viz1764898217568');
+                    var vizElement = divElement.getElementsByTagName('object')[0];
+
+                    // Always stretch to container width
+                    vizElement.style.width = "100%";
+                    vizElement.style.height = "900px";
+
+                    var scriptElement = document.createElement('script');
+                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+                    vizElement.parentNode.insertBefore(scriptElement, vizElement);
+                </script>
+
+            </div>
+        </div>
+
+    </section>
+
+</body>
+</html>
+

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Participant</title>
+
+    <!-- Google Fonts used across your site -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/addStyles.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="brand">Ella Rises</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Log Out</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Create Participant Profile</h1>
+
+        <div class="error-box">
+            There is no associated participant record. Please create your participant record here.
+        </div>
+
+        <% if (error_message) { %>
+            <div class="error-box"><%= error_message %></div>
+        <% } %>
+
+        <form action="/createParticipant" method="POST">
+            <label>First Name</label>
+            <input type="text" name="part_first_name" required>
+
+            <label>Last Name</label>
+            <input type="text" name="part_last_name" required>
+
+            <label>Date of Birth</label>
+            <input type="date" name="part_dob" required>
+
+            <label>Phone</label>
+            <input type="text" name="part_phone" required>
+
+            <label>City</label>
+            <input type="text" name="part_city" required>
+
+            <label>State</label>
+            <input type="text" name="part_state" required>
+
+            <label>ZIP Code</label>
+            <input type="text" name="part_zip" required>
+
+            <label>School or Employer</label>
+            <input type="text" name="part_school_or_employer" required>
+
+            <button class="submit-btn">Create Participant</button>
+        </form>
+    </div>
+
+
+</body>
+</html>

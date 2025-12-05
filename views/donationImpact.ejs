@@ -21,9 +21,10 @@
         <div class="nav-left">
             <a href="/" class="nav-brand">Ella Rises</a>
             <a href="/viewPart" class="nav-link">Participants</a>
-            <!-- Users table only viewable for managers -->
+            <!-- Only managers can view users -->
             <% if (level === "m") { %>
-                <a href="/viewUsers" class="nav-link">Users</a>
+            <a href="/viewUsers" class="nav-link">Users</a>
+            <a href="/viewRegistrations" class="nav-link">Registrations</a>
             <% } %>
             <a href="/viewEvents" class="nav-link">Events</a>
             <a href="/viewAllSurveys" class="nav-link">Survey</a>
@@ -31,14 +32,17 @@
             <a href="/viewAllDonations" class="nav-link">Donations</a>
             <a href="/programs" class="nav-link">Programs</a>
             <a href="/donationImpact" class="nav-link">Donate</a>
+            <% if (level === "m") { %>
+            <a href="/manager" class="nav-link">Manager Insights</a>
+            <% } %>
         </div>
 
+        <!-- Different button based on login status -->
         <div class="nav-right">
-            <!-- Change button based on login status -->
             <% if (login) { %>
-                <a href="/logout" class="nav-login">Log Out</a>
+            <a href="/logout" class="nav-login">Log Out</a>
             <% } else { %>
-                <a href="/login" class="nav-login">Login</a>
+            <a href="/login" class="nav-login">Login</a>
             <% } %>
         </div>
     </nav>
@@ -61,14 +65,6 @@
                 Your support helps fund programs that foster confidence, education,
                 cultural pride, and leadership.
             </p>
-
-            <ul class="impact-list">
-                <li>✨ $25 provides workshop supplies for a student</li>
-                <li>✨ $50 sponsors a girl to attend a mentoring event</li>
-                <li>✨ $100 funds STEM kits for hands-on exploration</li>
-                <li>✨ $250 supports a full leadership or creativity workshop</li>
-                <li>✨ $500 helps expand Ella Rises programs to new communities</li>
-            </ul>
 
             <p>
                 Thank you for uplifting the next generation of Latina leaders.
