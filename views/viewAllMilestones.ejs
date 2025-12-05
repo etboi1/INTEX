@@ -16,7 +16,7 @@
 
     <!-- NAVBAR -->
     <div class="navbar">
-        <div class="brand">Ella Rises</div>
+        <a href="/" class="brand">Ella Rises</a>
         <div>
             <a href="/">Home</a>
             <a href="/logout">Log Out</a>
@@ -100,7 +100,7 @@
                                 </td>
 
                                 <td>
-                                    <form action="/deleteMilestoneGlobal/<%= m.part_id %>/<%= m.milestone_number %>" method="post">
+                                    <form action="/deleteMilestoneGlobal/<%= m.part_id %>/<%= m.milestone_number %>" method="post" onsubmit="return confirm('Delete this milestone?');">
                                         <input class="action-btn" type="submit" value="Delete" />
                                     </form>
                                 </td>
