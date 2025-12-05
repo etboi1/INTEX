@@ -58,7 +58,6 @@
             <thead>
                 <tr>
                     <th>Email</th>
-                    <th>Password</th>
                     <th>Level</th>
                     <th>Edit</th>
                     <th>Delete</th>
@@ -69,7 +68,6 @@
                 <% users.forEach(user => { %>
                     <tr>
                         <td><%= user.email %></td>
-                        <td><%= user.password %></td>
                         <!-- display full level instead of single letter -->
                         <td><%= user.level === "m" ? "Manager" : "User" %></td>
 
