@@ -2105,118 +2105,6 @@ app.post("/addSurvey", (req, res) => {
         });
 });
 
-// GET: edit survey (manager only)
-app.get("/editSurvey/:survey_id", (req, res) => {
-    if (req.session.level !== "m") {
-        return res.redirect("/");
-    }
-
-    const surveyId = req.params.survey_id;
-
-    Promise.all([
-        knex("surveys").where({ survey_id: surveyId }).first(),
-        knex("registrations as r")
-            .leftJoin("participant_info as pi", "r.part_id", "pi.part_id")
-            .leftJoin("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
-            .leftJoin("event_templates as et", "eo.event_id", "et.event_id")
-            .select(
-                "r.reg_id",
-                "pi.part_first_name",
-                "pi.part_last_name",
-                "pi.part_email",
-                "et.event_name",
-                "eo.event_start_date_time"
-            )
-            .orderBy("r.reg_id", "asc")
-    ])
-        .then(([survey, registrations]) => {
-            if (!survey) {
-                return res.status(404).render("viewAllSurveys", {
-                    level: req.session.level,
-                    surveys: [],
-                    responsesBySurvey: {},
-                    error_message: "Survey not found."
-                });
-            }
-
-            res.render("editSurvey", {
-                level: req.session.level,
-                survey,
-                registrations,
-                error_message: ""
-            });
-        })
-        .catch(err => {
-            console.error("Error loading survey for edit:", err.message);
-            res.status(500).render("viewAllSurveys", {
-                level: req.session.level,
-                surveys: [],
-                responsesBySurvey: {},
-                error_message: "Unable to load survey for editing."
-            });
-        });
-});
-
-// POST: edit survey (manager only)
-app.post("/editSurvey/:survey_id", (req, res) => {
-    if (req.session.level !== "m") {
-        return res.redirect("/");
-    }
-
-    const surveyId = req.params.survey_id;
-    const {
-        reg_id,
-        survey_overall_score,
-        nps_bucket,
-        survey_comments,
-        survey_submission_date
-    } = req.body;
-
-    if (!reg_id || !survey_overall_score || !nps_bucket || !survey_submission_date) {
-        return Promise.all([
-            knex("surveys").where({ survey_id: surveyId }).first(),
-            knex("registrations as r")
-                .leftJoin("participant_info as pi", "r.part_id", "pi.part_id")
-                .leftJoin("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
-                .leftJoin("event_templates as et", "eo.event_id", "et.event_id")
-                .select(
-                    "r.reg_id",
-                    "pi.part_first_name",
-                    "pi.part_last_name",
-                    "pi.part_email",
-                    "et.event_name",
-                    "eo.event_start_date_time"
-                )
-                .orderBy("r.reg_id", "asc")
-        ])
-            .then(([survey, registrations]) => {
-                if (!survey) {
-                    return res.status(404).render("viewAllSurveys", {
-                        level: req.session.level,
-                        surveys: [],
-                        responsesBySurvey: {},
-                        error_message: "Survey not found."
-                    });
-                }
-
-                return res.status(400).render("editSurvey", {
-                    level: req.session.level,
-                    survey,
-                    registrations,
-                    error_message: "reg_id, overall score, NPS bucket, and submission date are required."
-                });
-            })
-            .catch(err => {
-                console.error("Error loading survey for validation:", err.message);
-                return res.status(500).render("viewAllSurveys", {
-                    level: req.session.level,
-                    surveys: [],
-                    responsesBySurvey: {},
-                    error_message: "Unable to update survey."
-                });
-            });
-    }
-
     const updatedSurvey = {
         reg_id,
         survey_overall_score,
@@ -2606,6 +2494,138 @@ app.get("/manager", (req, res) => {
         res.redirect("/")
     }
 })
+
+
+
+
+
+
+app.get("/takeSurvey", (req, res) => {
+    if (!req.session.isLoggedIn) {
+        return res.redirect("/login");
+    }
+
+    const partId = req.session.partId;
+
+    // Only show events the user attended
+    knex("registrations as r")
+        .join("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
+        .join("event_templates as et", "eo.event_id", "et.event_id")
+        .where({
+            "r.part_id": partId,
+            "r.reg_status": "a"   // Only attended events
+        })
+        .select(
+            "r.reg_id",
+            "et.event_name",
+            "eo.event_start_date_time"
+        )
+        .orderBy("eo.event_start_date_time", "desc")
+        .then(events => {
+            res.render("takeSurvey", {
+                events,
+                level: req.session.level,
+                error_message: ""
+            });
+        })
+        .catch(err => {
+            console.error("Error loading takeSurvey page:", err);
+            res.render("takeSurvey", {
+                events: [],
+                level: req.session.level,
+                error_message: "Unable to load survey options."
+            });
+        });
+});
+
+app.post("/takeSurvey", (req, res) => {
+
+    const regId = req.body.reg_id;
+    const satisfaction = req.body.satisfaction;
+    const usefulness = req.body.usefulness;
+    const instructor = req.body.instructor;
+    const recommendation = req.body.recommendation;
+    const comments = req.body.comments;
+
+    // validation
+    if (!regId || !satisfaction || !usefulness || !instructor || !recommendation) {
+        return res.render("takeSurvey", {
+            events: [],
+            level: req.session.level,
+            error_message: "Please fill out all fields before submitting."
+        });
+    }
+
+    // check for existing survey
+    knex("surveys")
+        .where({ reg_id: regId })
+        .first()
+        .then(existing => {
+            if (existing) {
+                // Return a special flag to stop the chain
+                return { stop: true };
+            }
+
+            // compute NPS bucket
+            let bucket = "pa"; // passive
+            if (recommendation >= 9) bucket = "pr";      
+            else if (recommendation <= 6) bucket = "de";
+
+            // insert survey
+            return knex("surveys")
+                .insert({
+                    reg_id: regId,
+                    survey_overall_score: satisfaction,
+                    survey_comments: comments || null,
+                    survey_submission_date: knex.fn.now(),
+                    nps_bucket: bucket
+                })
+                .returning("survey_id");
+        })
+        .then(result => {
+
+            // STOP if we got the stop flag
+            if (result && result.stop) {
+                return res.render("takeSurvey", {
+                    events: [],
+                    level: req.session.level,
+                    error_message: "You have already taken a survey for this event."
+                });
+            }
+
+            // now safe to proceed
+            const surveyId = result[0].survey_id;
+
+            const responses = [
+                { survey_id: surveyId, survey_question: "Satisfaction", survey_response: satisfaction },
+                { survey_id: surveyId, survey_question: "Usefulness",   survey_response: usefulness },
+                { survey_id: surveyId, survey_question: "Instructor",   survey_response: instructor },
+                { survey_id: surveyId, survey_question: "Recommendation", survey_response: recommendation }
+            ];
+
+            return knex("survey_question_responses").insert(responses);
+        })
+        .then(finalStep => {
+            // If finalStep is undefined → it means we already rendered stop page
+            if (!finalStep) return;
+
+            res.redirect("/viewAllSurveys");
+        })
+        .catch(err => {
+            console.error("Error submitting survey:", err);
+            res.render("takeSurvey", {
+                events: [],
+                level: req.session.level,
+                error_message: "Unable to submit survey at this time."
+            });
+        });
+});
+
+
+
+
+
+
 
 /* ---------------------------------------------------------
 ---------- SET UP SERVER TO LISTEN ON DESIRED PORT ---------
