@@ -2770,7 +2770,63 @@ app.post("/takeSurvey", (req, res) => {
 
 
 
+app.get("/searchRegistrations", (req, res) => {
 
+    // grab whatever the user typed into the search bar
+    const search = req.query.search || "";
+
+    // If they didn't type anything, just show all registrations again
+    if (!search.trim()) {
+        return res.redirect("/viewRegistrations");
+    }
+
+    // pull registrations + participant + event info
+    knex("registrations as r")
+        // join participant information
+        .join("participant_info as p", "r.part_id", "p.part_id")
+
+        // join the event occurrence
+        .join("event_occurrences as eo", "r.event_occurrence_id", "eo.event_occurrence_id")
+
+        // join the event template
+        .join("event_templates as et", "eo.event_id", "et.event_id")
+
+        // pick exactly which fields we want to bring back
+        .select(
+            "r.reg_id",           
+            "r.reg_status",       
+            "r.reg_created_at",   
+            "p.part_first_name",
+            "p.part_last_name",
+            "p.part_email",
+            "et.event_name"       
+        )
+
+        .where("p.part_email", "ilike", `%${search}%`)
+
+        // show newest registrations first
+        .orderBy("r.reg_created_at", "desc")
+
+        // load the page with results
+        .then(registrations => {
+            res.render("viewRegistrations", {
+                registrations,
+                error_message: "",       
+                level: req.session.level 
+            });
+        })
+
+        // if ANYTHING goes wrong
+        .catch(err => {
+            console.error("Error searching registrations:", err);
+
+            res.render("viewRegistrations", {
+                registrations: [],             // show empty results
+                error_message: "Error searching registrations.",
+                level: req.session.level
+            });
+        });
+});
 
 
 
