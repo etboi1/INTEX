@@ -1718,9 +1718,57 @@ app.get("/searchAllDonations", (req, res) => {
 
 
 // get page to see impact info
+/*
 app.get("/donationImpact", (req, res) => {
     res.render("donationImpact", { level: req.session.level, login: req.session.isLoggedIn } );
 });
+*/
+
+app.get("/donationImpact", async (req, res) => {
+    try {
+        // 2. Get average survey score
+        const result = await knex('surveys')
+            .avg({ avg_score: 'survey_overall_score' });
+
+        const average_survey_score = Number(result[0].avg_score || 0).toFixed(1);
+
+        // 4. Get total donation amount
+        const donationResult = await knex.raw(`
+        SELECT COALESCE(SUM(donation_amount), 0) AS total_donation
+        FROM participant_donations;
+        `);
+
+        const total_donation_raw = donationResult.rows[0].total_donation;
+
+        // Round to whole dollars
+        let total_donation = Math.round(total_donation_raw);
+
+        // Format with commas + dollar sign
+        total_donation = `$${total_donation.toLocaleString()}`;
+
+        // 5. Compute Percent Toward the Goal
+        const GOAL_AMOUNT = 400000;
+        const donation_percent = Math.min(
+            ((total_donation_raw / GOAL_AMOUNT) * 100).toFixed(2),
+            100
+        ); 
+        // capped at 100% so CSS doesn't break
+
+        // 6. Render page with injected variables
+        res.render("donationImpact", {
+            level: req.session.level,
+            login: req.session.isLoggedIn,
+            average_survey_score,
+            total_donation,
+            donation_percent
+        });
+
+    } catch (err) {
+        console.error("Error loading donation impact page:", err);
+        res.status(500).send("Server error loading donation impact page.");
+    }
+});
+
 
 // get page to see programs
 app.get("/programs", (req, res) => {

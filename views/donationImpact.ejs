@@ -11,7 +11,7 @@
     <!-- Brand Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles/mainStyles.css">
-
+    <link rel="stylesheet" href="/styles/impactStyles.css">
 </head>
 
 <body>
@@ -58,8 +58,9 @@
 
         <div class="impact-card">
 
-            <h2>How Your Donations Make a Difference</h2>
+            <h2>How Your Donation Makes a Difference</h2>
 
+            <!--
             <p>
                 Every contribution — no matter the size — opens doors for Latina youth.
                 Your support helps fund programs that foster confidence, education,
@@ -70,6 +71,44 @@
                 Thank you for uplifting the next generation of Latina leaders.
                 Your kindness creates lasting change.
             </p>
+            -->
+
+                            <!-- KPI Section -->
+            <div class="kpi-container">
+                <div class="kpi">
+                    <!--In a real website, we would connect these kpi's to the database, but we have these kpi's
+                    on our dashboard elsewhere on the website, and we wanted these to match. The only way to do
+                    that is by keeping these static, because we can't link the tableau dashboard to the live
+                    database on the free account-->
+                    <div class="kpi-value">31.27%</div>
+                    <div class="kpi-title">STEAM Graduation Rate</div>
+                    <div class="kpi-subtitle">(Percentage of Participants 22+ With STEAM Degree)</div>
+                </div>
+
+                <div class="kpi">
+                    <div class="kpi-value"> <%= average_survey_score %>/5</div>
+                    <div class="kpi-title">Average Participant Event Rating</div>
+                </div>
+
+                <div class="kpi">
+                    <div class="kpi-value">18.99%</div>
+                    <div class="kpi-title">STEAM Job Placement Rate</div>
+                    <div class="kpi-subtitle">(Percentage of Participants 18+ Hired for STEAM Jobs)</div>
+                </div>
+            </div>
+
+            <!-- Donation Progress -->
+            <div class="section-title">Donation Progress</div>
+
+            <div class="progress-wrapper">
+                <div class="progress-bar" style="width: <%= donation_percent %>%;">
+                    <span class="progress-text"><%= donation_percent %>%</span>
+                </div>
+                <div class="goal-marker"></div>
+            </div>
+
+
+            <div class="donation-amount">Raised: <%= total_donation %> &nbsp;&nbsp; | &nbsp;&nbsp; Goal: $400,000</div>
 
             <div class="donate-buttons">
                 <a href="/publicDonate" class="nav-login">Donate Now!</a>
