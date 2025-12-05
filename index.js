@@ -4,6 +4,9 @@
 
 require('dotenv').config();
 
+// Importing bcrypt for password hashing
+const bcrypt = require('bcrypt');
+
 // Setting up express variable
 const express = require("express");
 
@@ -136,6 +139,19 @@ app.use((req, res, next) => {
         return res.redirect("/login")
     }
 });
+
+/* -----------------------------------------
+----------- HELPER FUNCTIONS ---------------
+------------------------------------------*/
+
+async function logUserIn(req, user) {
+    // set session data
+    req.session.isLoggedIn = true;
+    req.session.email = user.email;
+    req.session.level = user.level;
+    req.session.partId = user.part_id;
+    req.session.userId = user.user_id;
+}
 
 /* --------------------------------
 ------------ GET ROUTES -----------
@@ -329,33 +345,29 @@ app.get("/editUser/:user_id", (req, res) => {
 ----------------------------------*/
 
 // Make sure login credentials are valid
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
     let email = req.body.email;
     let password = req.body.password;
 
-    // grab user where login matches
-    knex.select()
-        .from('users')
-        .where("email", email)
-        .andWhere("password", password)
-        .then(users => {
-            // Check if a user was found with matching username AND password
-            if (users.length > 0) {
-                req.session.isLoggedIn = true;
-                req.session.email = email;
-                req.session.level = users[0].level;
-                req.session.partId = users[0].part_id;
-                req.session.userId = users[0].user_id;
-                res.redirect("/");
-            } else {
-                // No matching user found
-                res.render("login", { error_message: "Invalid login" });
-            }
-        })
-        .catch(err => {
-            console.error("Login error:", err);
-            res.render("login", { error_message: "Invalid login" });
-        });
+    try {
+        const user = await knex("users").where({ email }).first();
+        if (!user) {
+            return res.render("login", { error_message: "Invalid email" });
+        }
+
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) {
+            return res.render("login", { error_message: "Invalid password" });
+        }
+
+        logUserIn(req, user);
+
+        res.redirect("/");
+
+    } catch(err) {
+        console.error("Login error:", err);
+        res.render("login", { error_message: "Invalid login" });
+    };
 });
 
 // POST to add a participant
@@ -570,65 +582,85 @@ app.post("/editPart/:part_id", (req, res) => {
 // ------------------------------------------------------
 
 // Add user from manager page
-app.post("/addUser", (req, res) => {
-    const { email, password, level } = req.body;
+app.post("/addUser", async (req, res) => {
+    try{
+        const { email, password, level } = req.body;
 
-    // basic required field check
-    if (!email || !password || !level) {
-        return res.status(400).render("addUser", { error_message: "All fields are required." });
-    }
+        // basic required field check
+        if (!email || !password || !level) {
+            return res.status(400).render("addUser", { error_message: "All fields are required." });
+        }
 
-    // make sure email isn't already taken
-    knex.select().from("users").where("email", email).first().then(user => {
+        // make sure email isn't already taken
+        // Check if email is already used
+        const user = await knex("users").where({ email }).first();
         if (user) {
             return res.render("addUser", { error_message: "Email is already in use" });
         }
 
-        // build and insert new user
-        const newUser = { email, password, level };
+        // Hash the password
+            const hashedPassword = await bcrypt.hash(password, 10);
 
-        return knex("users")
-            .insert(newUser)
-            .then(() => res.redirect("/viewUsers"));
-    })
-    .catch(dbErr => {
+        // Build the user object
+        const newUser = {
+            email,
+            password: hashedPassword,
+            level
+        };
+
+        // Insert user
+        await knex("users").insert(newUser);
+
+        res.redirect('/viewUsers');
+
+    } catch(dbErr) {
         console.error("Add user error:", dbErr.message);
         res.status(500).render("addUser", { error_message: "Unable to save user. Please try again." });
-    });
+    };
 });
 
 // Add user from signup page
-app.post("/addSignUp", (req, res) => {
-    const { email, password, level } = req.body;
+app.post("/addSignUp", async (req, res) => {
+    try {
+        let { email, password, level } = req.body;
 
-    // signup needs email + password
-    if (!email || !password) {
-        return res.status(400).render("signup", { error_message: "All fields are required." });
-    }
+        if (!email || !password) {
+            return res.status(400).render("signup", { error_message: "All fields are required." });
+        }
 
-    // check if email is already used
-    knex.select().from("users").where("email", email).first().then(user => {
+        // Check if email is already used
+        const user = await knex("users").where({ email }).first();
         if (user) {
             return res.render("signup", { error_message: "Email is already in use" });
         }
 
-        // create user and send them to login
-        const newUser = { email, password, level };
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        return knex("users")
-            .insert(newUser)
-            .then(() => res.redirect("/login"));
-    })
-    .catch(dbErr => {
-        console.error("Add user error:", dbErr.message);
-        res.status(500).render("signup", { error_message: "Unable to save user. Please try again." });
-    });
+        // Build the user object
+        const newUser = {
+            email,
+            password: hashedPassword,
+            level
+        };
+
+        // Insert user
+        await knex("users").insert(newUser);
+
+        // Log in user immediately after creating them
+        const thisUser = await knex("users").where({ email }).first();
+        logUserIn(req, thisUser);
+
+        return res.redirect('/');
+
+    } catch (err) {
+        console.error("Add user error:", err.message);
+        return res.status(500).render("signup", { error_message: "Unable to save user. Please try again." });
+    }
 });
 
-
-
-
 // Edit user
+/*
 app.post("/editUser/:user_id", (req, res) => {
     const userId = req.params.user_id;
     const { email, password, level } = req.body;
@@ -725,6 +757,96 @@ app.post("/editUser/:user_id", (req, res) => {
                     });
                 });
         });
+});
+*/
+// Edit user
+app.post("/editUser/:user_id", async (req, res) => {
+    const userId = req.params.user_id;
+    let { email, password, level } = req.body;
+
+    try {
+        // Validate required fields
+        if (!email || !password || !level) {
+            const user = await knex("users").where({ user_id: userId }).first();
+
+            if (!user) {
+                return res.status(404).render("viewUsers", {
+                    users: [],
+                    error_message: "User not found."
+                });
+            }
+
+            return res.status(400).render("editUser", {
+                user,
+                error_message: "All fields are required."
+            });
+        }
+
+        // Load the original user
+        const originalUser = await knex("users").where({ user_id: userId }).first();
+
+        if (!originalUser) {
+            return res.status(404).render("viewUsers", {
+                users: [],
+                error_message: "User not found."
+            });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // If email has NOT changed, skip duplicate email check
+        if (originalUser.email === email) {
+            await knex("users")
+                .where({ user_id: userId })
+                .update({
+                    email,
+                    password: hashedPassword,  // hashed!
+                    level
+                });
+
+            return res.redirect("/viewUsers");
+        }
+
+        // If email HAS changed, check for duplicates
+        const existingUser = await knex("users").where({ email }).first();
+
+        if (existingUser) {
+            return res.render("editUser", {
+                user: originalUser,
+                error_message: "Email is already in use"
+            });
+        }
+
+        // Update with new hashed password
+        await knex("users")
+            .where({ user_id: userId })
+            .update({
+                email,
+                password: hashedPassword,  // hashed!
+                level
+            });
+
+        return res.redirect("/viewUsers");
+
+    } catch (err) {
+        console.error("Error updating user:", err);
+
+        try {
+            const user = await knex("users").where({ user_id: userId }).first();
+
+            return res.status(500).render("editUser", {
+                user,
+                error_message: "Unable to update user. Please try again."
+            });
+        } catch (fetchErr) {
+            console.error("Post-update fetching error:", fetchErr);
+            return res.status(500).render("viewUsers", {
+                users: [],
+                error_message: "Unable to update user."
+            });
+        }
+    }
 });
 
 // Delete user
