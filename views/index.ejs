@@ -24,6 +24,7 @@
             <!-- Only managers can view users -->
             <% if (level === "m") { %>
             <a href="/viewUsers" class="nav-link">Users</a>
+            <a href="/viewRegistrations" class="nav-link">Registrations</a>
             <% } %>
             <a href="/viewEvents" class="nav-link">Events</a>
             <a href="/viewAllSurveys" class="nav-link">Survey</a>
@@ -31,6 +32,9 @@
             <a href="/viewAllDonations" class="nav-link">Donations</a>
             <a href="/programs" class="nav-link">Programs</a>
             <a href="/donationImpact" class="nav-link">Donate</a>
+            <% if (level === "m") { %>
+            <a href="/manager" class="nav-link">Manager Insights</a>
+            <% } %>
         </div>
 
         <!-- Different button based on login status -->
@@ -58,7 +62,7 @@
         </p>
 
         <!-- Lets users register -->
-        <a href="/enroll" class="btn-main">Enroll Now</a>
+        <a href="/register" class="btn-main">Enroll Now</a>
         &nbsp;&nbsp;
         <!-- Leads to impact page -->
         <a href="/donationImpact" class="btn-main">Support Us</a>

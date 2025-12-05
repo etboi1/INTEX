@@ -1,0 +1,89 @@
+<!-- Joaquin Elizalde, Emma Frederick, Ethan Grundvig, Joshua Solano -->
+<!-- Edit Registration -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Registration</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/addStyles.css">
+</head>
+
+<body>
+
+    <div class="navbar">
+        <div class="brand">Ella Rises</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Log Out</a>
+        </div>
+    </div>
+
+    <a href="/viewRegistrations" class="back-btn">← Back to Registrations</a>
+
+    <div class="container">
+        <h1>Edit Registration</h1>
+
+        <% if (error_message) { %>
+            <div class="error-box"><%= error_message %></div>
+        <% } %>
+
+        <form action="/editRegistration/<%= registration.reg_id %>" method="POST">
+
+            <!-- Participant -->
+            <div class="form-group">
+                <label>Participant</label>
+                <select name="part_id" required>
+                    <% participants.forEach(p => { %>
+                        <option value="<%= p.part_id %>"
+                            <%= p.part_id === registration.part_id ? "selected" : "" %>>
+                            <%= p.part_first_name %> <%= p.part_last_name %> — <%= p.part_email %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <!-- Event -->
+            <div class="form-group">
+                <label>Event</label>
+                <select name="event_occurrence_id" required>
+                    <% events.forEach(e => { %>
+                        <option value="<%= e.event_occurrence_id %>"
+                            <%= e.event_occurrence_id === registration.event_occurrence_id ? "selected" : "" %>>
+                            <%= e.event_name %> —
+                            <%= new Date(e.event_start_date_time).toLocaleDateString() %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <!-- Status -->
+            <div class="form-group">
+                <label>Registration Status</label>
+                <select name="reg_status" required>
+                    <option value="r" <%= registration.reg_status === "r" ? "selected" : "" %>>Registered</option>
+                    <option value="a" <%= registration.reg_status === "a" ? "selected" : "" %>>Attended</option>
+                    <option value="n" <%= registration.reg_status === "n" ? "selected" : "" %>>No-Show</option>
+                    <option value="c" <%= registration.reg_status === "c" ? "selected" : "" %>>Cancelled</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Registration Date</label>
+                <input 
+                    type="date" 
+                    name="reg_created_at" 
+                    value="<%= registration.reg_created_at.toISOString().split('T')[0] %>" 
+                    required
+                >
+            </div>
+
+            <button class="submit-btn">Save Changes</button>
+        </form>
+
+    </div>
+
+</body>
+</html>
