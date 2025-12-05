@@ -2105,29 +2105,6 @@ app.post("/addSurvey", (req, res) => {
         });
 });
 
-    const updatedSurvey = {
-        reg_id,
-        survey_overall_score,
-        nps_bucket,
-        survey_comments,
-        survey_submission_date
-    };
-
-    knex("surveys")
-        .where({ survey_id: surveyId })
-        .update(updatedSurvey)
-        .then(() => res.redirect("/viewAllSurveys"))
-        .catch(err => {
-            console.error("Error updating survey:", err.message);
-            res.status(500).render("viewAllSurveys", {
-                level: req.session.level,
-                surveys: [],
-                responsesBySurvey: {},
-                error_message: "Unable to update survey."
-            });
-        });
-});
-
 // DELETE survey (manager only)
 app.post("/deleteSurvey/:survey_id", (req, res) => {
     if (req.session.level !== "m") {
