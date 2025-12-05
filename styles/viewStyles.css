@@ -15,16 +15,20 @@ body {
     width: 100%;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 18px 40px;
     background: #F9F5EA;
     border-bottom: 2px solid #FFD8D1;
     box-sizing: border-box;
+    flex-wrap: wrap; /* allows mobile wrapping */
+    gap: 12px;
 }
 
 .navbar .brand {
     font-family: 'DM Serif Display', serif;
     font-size: 26px;
     color: #333;
+    white-space: nowrap;
 }
 
 .navbar a {
@@ -32,6 +36,27 @@ body {
     font-weight: 500;
     text-decoration: none;
     margin-left: 20px;
+    white-space: nowrap;
+}
+
+/* Center links on small screens */
+@media (max-width: 650px) {
+    .navbar {
+        padding: 16px 20px;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .navbar a {
+        margin-left: 12px;
+        font-size: 14px;
+    }
+
+    .navbar .brand {
+        width: 100%;
+        margin-bottom: 4px;
+        font-size: 24px;
+    }
 }
 
 /* ============================================================
@@ -40,7 +65,7 @@ body {
 .container {
     width: 95%;
     max-width: 1400px;
-    margin: 40px auto;
+    margin: 30px auto;
     background: white;
     padding: 30px;
     border-radius: 14px;
@@ -54,8 +79,19 @@ h1 {
     margin-top: 0;
 }
 
+/* Smaller spacing on mobile */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 1.6rem;
+    }
+}
+
 /* ============================================================
-    SEARCH BAR (SHARED)
+    SEARCH BAR
    ============================================================ */
 .search-input {
     padding: 10px;
@@ -77,8 +113,22 @@ h1 {
     background: #FFEEE9;
 }
 
+/* Stack search bar on mobile */
+@media (max-width: 700px) {
+    .search-input {
+        width: 90%;
+        margin-bottom: 10px;
+    }
+
+    .search-btn {
+        width: 60%;
+        padding: 12px;
+        font-size: 15px;
+    }
+}
+
 /* ============================================================
-    ERROR MESSAGE BOX
+    ERROR BOX
    ============================================================ */
 .error-box {
     background: #FFE5E2;
@@ -118,8 +168,19 @@ h1 {
     background: #FFEEE9;
 }
 
+/* Buttons scale on mobile */
+@media (max-width: 650px) {
+    .add-btn {
+        display: block;
+        width: 80%;
+        margin: 10px auto;
+        padding: 12px;
+        font-size: 16px;
+    }
+}
+
 /* ============================================================
-    TABLE STYLING (SHARED FOR USERS + PARTICIPANTS)
+    TABLE STYLING
    ============================================================ */
 .table-wrapper {
     overflow-x: auto;
@@ -130,6 +191,7 @@ table {
     border-collapse: collapse;
     margin-top: 25px;
     table-layout: auto;
+    background: #FFF;
 }
 
 table th,
@@ -138,21 +200,31 @@ table td {
     text-align: left;
     word-wrap: break-word;
     white-space: normal;
-    font-size: 12px;
-    padding: 8px 10px;
+    font-size: 13px;
+    padding: 10px 12px;
 }
 
 table th {
     background: #FFF3EF;
     font-weight: 600;
+    font-size: 14px;
 }
 
 tr:hover {
     background: #FFF9F6;
 }
 
+/* Mobile table improvements */
+@media (max-width: 650px) {
+    table th,
+    table td {
+        font-size: 12px;
+        padding: 8px;
+    }
+}
+
 /* ============================================================
-    ACTION BUTTONS FOR TABLE ROWS
+    ACTION BUTTONS
    ============================================================ */
 .action-btn,
 .ms-action-btn {
@@ -179,12 +251,24 @@ tr:hover {
     background: #FFEEE9;
 }
 
-td form {
-    display: inline;
+/* Mobile buttons */
+@media (max-width: 600px) {
+
+    .action-btn,
+    .ms-action-btn {
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    td form {
+        display: block;
+    }
 }
 
 /* ============================================================
-    EMPTY STATE (NO RESULTS)
+    EMPTY STATE
    ============================================================ */
 .empty {
     text-align: center;
@@ -192,6 +276,9 @@ td form {
     color: #666;
 }
 
+/* ============================================================
+    BACK BUTTON
+   ============================================================ */
 .back-btn {
     display: block;
     width: fit-content;
@@ -209,4 +296,14 @@ td form {
 
 .back-btn:hover {
     background: #F4B092;
+}
+
+/* Center + expand back button on mobile */
+@media (max-width: 650px) {
+    .back-btn {
+        display: block;
+        width: 80%;
+        text-align: center;
+        padding: 12px;
+    }
 }
