@@ -108,6 +108,7 @@
                             <!-- Make sure it displays full title instead of just "p" or "a" -->
                             <td><% if (part.part_role === "p") { %>Participant<% } else { %>Admin<% } %></td>
                             <% if (level === "m") { %>
+                            <!-- Adding phoen number stuff to the display -->
                             <td><%= part.part_phone.toString().replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3") %></td>
                             <% } %>
                             <td><%= part.part_city %></td>

@@ -567,3 +567,79 @@ BUTTONS — RESTORED + REFINED
         display: block;
     }
 }
+
+
+/* --- NAVBAR BASE --- */
+.navbar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 40px;
+    background: #F9F5EA;
+    border-bottom: 2px solid #FFD8D1;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.nav-left,
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.nav-left {
+    flex: 1 1 auto; /* allows it to shrink on smaller screens */
+}
+
+.nav-right {
+    flex-shrink: 0;
+}
+
+.nav-link, .nav-brand {
+    white-space: nowrap;
+}
+
+/* --- FORCE CLEAN STACKED LAYOUT WHEN SCREEN < 1400px --- */
+@media (max-width: 1400px) {
+
+    .navbar {
+        padding: 16px 20px;
+        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* Brand on its own line */
+    .nav-brand {
+        font-size: 1.8rem;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 4px;
+    }
+
+    /* All nav links centered as a wrapped row */
+    .nav-left {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 18px;
+        width: 100%;
+        order: 2;
+    }
+
+    /* Login/Logout always placed cleanly on its own line */
+    .nav-right {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        order: 3;
+        margin-top: 6px;
+    }
+}
