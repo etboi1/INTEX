@@ -25,7 +25,7 @@
     <!-- Top buttons -->
     <div class="add-btn-container">
         <!-- Take Survey button (link this to your actual survey URL) -->
-        <a href="https://example.com/survey-link" target="_blank" class="add-btn">Take Survey</a>
+        <a href="/takeSurvey" class="add-btn">Take Survey</a>
 
         <!-- Manager-only: Add Survey -->
         <% if (level === "m") { %>
@@ -67,8 +67,6 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Survey ID</th>
-                            <th>Reg ID</th>
                             <th>Participant</th>
                             <th>Email</th>
                             <th>Event</th>
@@ -101,8 +99,6 @@
                                 const surveyResponses = responsesBySurvey[survey.survey_id] || [];
                             %>
                             <tr>
-                                <td><%= survey.survey_id %></td>
-                                <td><%= survey.reg_id || "-" %></td>
                                 <td>
                                     <% if (survey.part_first_name || survey.part_last_name) { %>
                                         <%= survey.part_first_name || "" %> <%= survey.part_last_name || "" %>
@@ -114,16 +110,21 @@
                                 <td><%= survey.event_name || "-" %></td>
                                 <td><%= eventDate || "-" %></td>
                                 <td><%= survey.survey_overall_score %></td>
-                                <td><%= survey.nps_bucket %></td>
+                                <td>
+                                    <% if (survey.nps_bucket === "pr") { %>
+                                        Promoter
+                                    <% } else if (survey.nps_bucket === "pa") { %>
+                                        Passive
+                                    <% } else if (survey.nps_bucket === "de") { %>
+                                        Detractor
+                                    <% } else { %>
+                                        -
+                                    <% } %>
+                                </td>
                                 <td><%= survey.survey_comments || "-" %></td>
                                 <td><%= submissionDate || "-" %></td>
 
                                 <% if (level === "m") { %>
-                                    <td>
-                                        <form action="/editSurvey/<%= survey.survey_id %>" method="get">
-                                            <input class="action-btn" type="submit" value="Edit" />
-                                        </form>
-                                    </td>
                                     <td>
                                         <form action="/deleteSurvey/<%= survey.survey_id %>" method="post" onsubmit="return confirm('Delete this survey?');">
                                             <input class="action-btn" type="submit" value="Delete" />
