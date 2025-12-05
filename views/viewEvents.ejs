@@ -15,7 +15,7 @@
 
     <!-- NAVBAR -->
     <div class="navbar">
-        <div class="brand">Ella Rises</div>
+        <a href="/" class="brand">Ella Rises</a>
         <div>
             <a href="/">Home</a>
             <a href="/logout">Log Out</a>
@@ -99,7 +99,7 @@
                             </td>
 
                             <td>
-                                <form action="/deleteEvent/<%= ev.event_occurrence_id %>" method="post">
+                                <form action="/deleteEvent/<%= ev.event_occurrence_id %>" method="post" onsubmit="return confirm('Delete this event?');">
                                     <input class="action-btn" type="submit" value="Delete" />
                                 </form>
                             </td>
